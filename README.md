@@ -1,4 +1,4 @@
-# 🏟️ BookMyTurf — Turf Booking Platform
+# ⚽ BookMyTurf — Turf Booking Platform
 
 A full-stack **MERN-based sports venue booking platform** that enables users to discover turfs, book available time slots, authenticate securely using Email OTP, and manage their bookings. The project also includes a dedicated **Admin Dashboard** for managing venues, bookings, booking statuses, refunds, and real-time booking notifications.
 
@@ -57,9 +57,6 @@ A full-stack **MERN-based sports venue booking platform** that enables users to 
 
 ![Admin Dashboard](./screenshots/admin-dashboard.png)
 
-> **Note:** Create a `screenshots` folder in the repository root and add your project screenshots using the filenames shown above.
-
----
 
 # 🧰 Tech Stack
 
