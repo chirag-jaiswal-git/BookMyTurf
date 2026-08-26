@@ -45,10 +45,6 @@ A full-stack **MERN-based sports venue booking platform** that enables users to 
 
 ![Turf Details](./screenshots/turf-details.png)
 
-### 📅 Booking Page
-
-![Booking](./screenshots/booking.png)
-
 ### 📋 My Bookings
 
 ![My Bookings](./screenshots/my-bookings.png)
