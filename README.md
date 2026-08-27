@@ -345,5 +345,5 @@ This project is developed for educational and learning purposes.
 </p>
 
 <p align="center">
-  🏟️ <strong>BookMyTurf</strong> — Book Your Game. Play Without Limits.
+ ⚽ <strong>BookMyTurf</strong> — Book Your Game. Play Without Limits.
 </p>
