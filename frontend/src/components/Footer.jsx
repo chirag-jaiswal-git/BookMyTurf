@@ -6,7 +6,7 @@ export default function Footer() {
       
       {/* Bottom Bar */}
       <div className=" text-center py-3 text-lg font-semibold">
-        © {new Date().getFullYear()} bookMyTurf. All Rights Reserved.
+        © {new Date().getFullYear()} BookMyTurf. All Rights Reserved.
       </div>
     </footer>
   );

@@ -18,7 +18,7 @@ export default function About() {
             </div>
             
             <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-gray-900 mb-6 leading-tight">
-                We Are <span className="text-gray-900 bg-clip-text bg-gradient-to-r ">bookMyturf</span>
+                We Are <span className="text-gray-900 bg-clip-text bg-gradient-to-r ">BookMyturf</span>
             </h1>
             
             <p className="text-xl md:text-2xl text-gray-800 max-w-3xl mx-auto leading-relaxed font-medium">
@@ -72,7 +72,7 @@ export default function About() {
                         It started with a simple frustration: calling ten different venues just to find one available slot for a Sunday match. We knew there had to be a better way.
                     </p>
                     <p>
-                        <span className="font-bold text-emerald-700">bookMyturf</span> eliminates the hassle. We provide a seamless, real-time booking experience that lets you focus on what matters most—the game.
+                        <span className="font-bold text-emerald-700">BookMyturf</span> eliminates the hassle. We provide a seamless, real-time booking experience that lets you focus on what matters most—the game.
                     </p>
                 </div>
                 
