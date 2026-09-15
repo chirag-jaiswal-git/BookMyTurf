@@ -14,6 +14,9 @@ import bookingRouter from "./routes/bookingRoutes.js";
 
 const app = express();
 
+connectDB();
+connectCloudinary();
+
 // ===============================
 // CORS
 // ===============================
@@ -85,9 +88,6 @@ const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   try {
-    await connectDB();
-    connectCloudinary();
-
     server.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
