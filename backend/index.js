@@ -20,6 +20,7 @@ app.use(express.json());
 connectDB();
 connectCloudinary();
 
+
 app.use("/auth", AuthRouter);
 app.use("/venue", venueRouter);
 app.use("/booking", bookingRouter);
