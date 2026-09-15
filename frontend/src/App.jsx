@@ -1,7 +1,11 @@
+// App.jsx
+
 import React from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate } from "react-router-dom";
+
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+
 import Home from "./pages/Home";
 import Bookings from "./pages/Bookings";
 import Contact from "./pages/Contact";
@@ -12,33 +16,34 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import TurfDetails from "./pages/Turfdetails";
 import About from "./pages/About us";
 
-
 export default function App() {
   const location = useLocation();
 
-  // 1. Define the paths where you want to HIDE the Navbar
-  const hideNavbarRoutes = [
-    "/login",
-    "/register",
-    "/forgot-password",
-    "/reset_password/:id/:token",
-  ];
+  // Routes where Navbar should not be displayed
+  const hideNavbarRoutes = ["/login", "/register"];
 
-  // 2. Check if the current path is inside that list
   const showNavbar = !hideNavbarRoutes.includes(location.pathname);
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 relative">
-      {/* 3. Only render Navbar if showNavbar is true */}
+    <div className="relative flex min-h-screen flex-col bg-gray-50">
+      {/* Navbar */}
       {showNavbar && <Navbar />}
 
+      {/* Main content */}
       <main className="flex-grow">
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<Home />} />
+
           <Route path="/login" element={<Login />} />
+
           <Route path="/register" element={<Register />} />
+
           <Route path="/contact" element={<Contact />} />
+
+          <Route path="/about-us" element={<About />} />
+
+          {/* Protected turf details route */}
           <Route
             path="/turfdetails/:venueId"
             element={
@@ -47,9 +52,17 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/about-us" element={<About />} />
-          {/* Protected routes */}
-          <Route path="/bookings" element={<Bookings />} />
+
+          {/* Protected booking routes */}
+          <Route
+            path="/bookings"
+            element={
+              <ProtectedRoute>
+                <Bookings />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/my-bookings"
             element={
@@ -58,13 +71,14 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* Fallback route for invalid URLs */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
 
-      {/* Footer visible only on /bookings and /contact (Your existing logic) */}
-      {/* {(location.pathname === "/bookings" || location.pathname === "/contact") && ( */}
+      {/* Footer */}
       <Footer />
-      {/* )} */}
     </div>
   );
 }

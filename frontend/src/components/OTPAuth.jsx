@@ -41,36 +41,44 @@ const OTPAuth = ({ mode = "login" }) => {
   }, [timer]);
 
   // --- API CALLS (LOGIC UNCHANGED) ---
-  const sendOTP = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    const { name, email, phone } = formData;
-    if (!email) {
-      setLoading(false);
-      return toast.error("Email is required");
-    }
-    if (mode === "register" && (!name || !phone || phone.length !== 10)) {
-      setLoading(false);
-      return toast.error("Please fill all fields correctly");
-    }
-    try {
-      const res = await axios.post(`${backendURL}/auth/send-otp`, {
-        email,
-        ...(mode === "register" && { name, phone }),
-      });
-      if (res.data.success) {
-        toast.success(res.data.message);
-        setStep(2);
-        setTimer(60);
-      } else {
-        toast.error(res.data.message);
-      }
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Server error");
-    } finally {
-      setLoading(false);
-    }
-  };
+ const sendOTP = async (e) => {
+   e.preventDefault();
+   setLoading(true);
+
+   const name = formData.name.trim();
+   const email = formData.email.trim().toLowerCase();
+   const phone = formData.phone.trim();
+
+   if (!email) {
+     setLoading(false);
+     return toast.error("Email is required");
+   }
+
+   if (mode === "register" && (!name || !phone || phone.length !== 10)) {
+     setLoading(false);
+     return toast.error("Please fill all fields correctly");
+   }
+
+   try {
+     const res = await axios.post(`${backendURL}/auth/send-otp`, {
+       name,
+       email,
+       phone,
+     });
+
+     if (res.data.success) {
+       toast.success(res.data.message || "OTP sent to your email");
+       setStep(2);
+       setTimer(60);
+     } else {
+       toast.error(res.data.message);
+     }
+   } catch (err) {
+     toast.error(err.response?.data?.message || "Failed to send OTP");
+   } finally {
+     setLoading(false);
+   }
+ };
 
   const verifyOTP = async (e) => {
     e.preventDefault();
@@ -109,7 +117,7 @@ const OTPAuth = ({ mode = "login" }) => {
     if (timer > 0) return;
     try {
       await axios.post(`${backendURL}/auth/send-otp`, {
-        email: formData.email,
+        email: formData.email.trim().toLowerCase(),
       });
       toast.success("OTP resent");
       setTimer(60);

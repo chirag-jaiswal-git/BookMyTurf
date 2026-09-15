@@ -4,18 +4,36 @@ const otpSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
+    lowercase: true,
+    trim: true,
   },
+
   otp: {
     type: String,
     required: true,
   },
+
   expiresAt: {
     type: Date,
     required: true,
   },
+
+  attempts: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
+
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
-// Auto delete expired OTP
 otpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
-export default mongoose.model("OTP", otpSchema);
+otpSchema.index({ email: 1 }, { unique: true });
+
+const OTP = mongoose.models.OTP || mongoose.model("OTP", otpSchema);
+
+export default OTP;

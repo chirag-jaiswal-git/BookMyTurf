@@ -1,31 +1,34 @@
 import mongoose from "mongoose";
 
-let userEnquirySchema = mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-  },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  phone: {
-    type: String,
-    required: true,
-  },
-  otp: {
-    type: String,
-  },
-  otpExpiry: {
-    type: Date,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+      minlength: 2,
+      maxlength: 100,
+    },
 
-let enquiryModel = mongoose.model("User", userEnquirySchema);
-export default enquiryModel;
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
 
+    phone: {
+      type: String,
+      required: true,
+      match: /^\d{10}$/,
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
+
+const userModel = mongoose.models.User || mongoose.model("User", userSchema);
+
+export default userModel;

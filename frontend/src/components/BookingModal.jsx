@@ -5,7 +5,8 @@ import { X, Clock, Calendar, CheckCircle, Info } from "lucide-react";
 import axios from "axios";
 
 export default function BookingModal({ venue, onClose }) {
-  const backendURL = import.meta.env.VITE_BACKEND_URL;
+  const backendURL =
+    import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
   const [loading, setLoading] = useState(false);
   const [date, setDate] = useState("");
   const [from, setFrom] = useState("");
@@ -32,15 +33,17 @@ export default function BookingModal({ venue, onClose }) {
 
   const calculateTotal = () => {
     const duration = getDuration();
-    if (!duration) return null;
-    // Simple logic: Price * Hours
-    const total = venue.price * duration.diffHours;
-    return Math.round(total);
+
+    if (!duration || !venue?.price) {
+      return 0;
+    }
+
+    return Math.ceil(duration.diffHours * Number(venue.price));
   };
+
 
   const handleConfirm = async () => {
     const duration = getDuration();
-    const total = calculateTotal();
 
     if (!date || !from || !to || !duration) {
       setError("Please fill all details correctly.");
@@ -50,35 +53,24 @@ export default function BookingModal({ venue, onClose }) {
 
     try {
       setLoading(true);
-
-      // ⚠️ You should get user info from auth context or localStorage
-      let saved = [];
-
-      try {
-        const savedData = localStorage.getItem("bookings");
-        saved = savedData ? JSON.parse(savedData) : [];
-      } catch (error) {
-        console.error("Invalid bookings data in localStorage");
-        saved = [];
-      }
-
+      setError("");
 
       const token = localStorage.getItem("token");
 
       if (!token) {
         toast.error("You must be logged in to book a slot!");
+        navigate("/login");
         return;
       }
 
       const bookingData = {
-        venueId: venue._id, // IMPORTANT: must be MongoDB _id
+        venueId: venue._id,
         bookingDate: date,
         timeSlot: `${from}-${to}`,
-        totalPrice: total,
       };
 
       const response = await axios.post(
-        backendURL + "/booking/create",
+        `${backendURL}/booking/create`,
         bookingData,
         {
           headers: {
@@ -88,7 +80,7 @@ export default function BookingModal({ venue, onClose }) {
       );
 
       setBookingDone(true);
-      console.log("RESPONSE DATA:", response.data);
+
       toast.success(response.data.message || "Booking confirmed!");
 
       setTimeout(() => {
@@ -97,7 +89,12 @@ export default function BookingModal({ venue, onClose }) {
       }, 1000);
     } catch (error) {
       console.error("Booking Error:", error);
-      toast.error(error.message);
+
+      const message =
+        error.response?.data?.message || "Unable to create booking";
+
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -210,7 +207,7 @@ export default function BookingModal({ venue, onClose }) {
               <div className="flex justify-between items-center pt-1">
                 <span className="font-bold text-slate-800">Total</span>
                 <span className="text-2xl font-bold text-emerald-600">
-                  ₹{calculateTotal() || 0}
+                  ₹{calculateTotal()}
                 </span>
               </div>
             </div>
@@ -220,7 +217,7 @@ export default function BookingModal({ venue, onClose }) {
               disabled={loading}
               className="mt-6 w-full bg-emerald-600 text-white font-bold py-3.5 rounded-xl hover:bg-emerald-700 transition shadow-lg shadow-emerald-200 active:scale-[0.98] disabled:opacity-60"
             >
-              {loading ? "Processing..." : "CONFIRM & PAY"}
+              {loading ? "Processing..." : "CONFIRM BOOKING"}
             </button>
           </>
         ) : (

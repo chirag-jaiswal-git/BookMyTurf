@@ -1,9 +1,8 @@
-import { useState , useEffect } from "react";
+import { useState, useEffect } from "react";
 import SearchSection from "../components/SearchSelection";
 import TurfList from "../components/TurfList";
 import BookingModal from "../components/BookingModal";
 import axios from "axios";
-
 
 export default function Bookings() {
   const [filteredVenues, setFilteredVenues] = useState([]);
@@ -11,15 +10,13 @@ export default function Bookings() {
   const [resetList, setResetList] = useState(false);
   const [venues, setVenues] = useState([]);
   const backendURL = import.meta.env.VITE_BACKEND_URL;
-  
 
   const handleBookNow = (venue) => setSelectedVenue(venue);
   const handleCloseModal = () => setSelectedVenue(null);
 
   const getVenues = async () => {
     try {
-      const response = await axios.get(backendURL + "/venue/list"); 
-       
+      const response = await axios.get(backendURL + "/venue/list");
 
       if (response.data.success) {
         setVenues(response.data.venues);
@@ -31,24 +28,16 @@ export default function Bookings() {
   };
 
   useEffect(() => {
-  getVenues();
-}, []);
-
+    getVenues();
+  }, []);
 
   return (
-   
-    <div
-      className="min-h-screen bg-cover bg-center bg-fixed bg-blend-overlay"
-      
-    >
-     
-
+    <div className="min-h-screen bg-cover bg-center bg-fixed bg-blend-overlay">
       {/* --- BACKGROUND DECOR --- */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden bg-emerald-700 z-0">
         {/* Abstract Green Blob for Sporty Vibe */}
-        
       </div>
-z
+      z
       <div className="min-h-screen w-full backdrop-blur-sm py-8 px-6 md:px-16">
         <div className="max-w-7xl mx-auto">
           <div className="p-6 mb-8">
@@ -68,7 +57,6 @@ z
           </div>
         </div>
       </div>
-
       {selectedVenue && (
         <BookingModal venue={selectedVenue} onClose={handleCloseModal} />
       )}

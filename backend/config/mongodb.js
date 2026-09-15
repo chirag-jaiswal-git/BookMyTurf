@@ -1,10 +1,13 @@
 import mongoose from "mongoose";
+import bookingModel from "../models/bookingModel.js";
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.DBURL, {
+    await mongoose.connect(process.env.DBURL, {
       dbName: "bookmyturf_db",
     });
+
+    await bookingModel.syncIndexes();
 
     console.log("✅ MongoDB Connected");
   } catch (error) {

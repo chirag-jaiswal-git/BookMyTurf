@@ -1,7 +1,12 @@
 import { v2 as cloudinary } from "cloudinary";
 import venueModel from "../models/venueModel.js";
+import bookingModel from "../models/bookingModel.js";
+import mongoose from "mongoose";
 import fs from "fs";
 
+// ===============================
+// ADD VENUE
+// ===============================
 const addVenue = async (req, res) => {
   try {
     const {
@@ -17,51 +22,54 @@ const addVenue = async (req, res) => {
       status,
     } = req.body;
 
-    if (!name || !area || !city || !price) {
+    // Required fields
+    if (!name || !area || !city || !description || !price || !contact_no) {
       return res.status(400).json({
         success: false,
         message: "Required fields missing",
       });
     }
 
-    // Upload images to Cloudinary
-    const imagesUrl = await Promise.all(
-      req.files.map(async (file) => {
-        const result = await cloudinary.uploader.upload(file.path, {
-          folder: "venues",
-          resource_type: "image",
-        });
+    // Upload images
+    const imagesUrl = [];
 
-        // Remove file from local storage after upload
+    for (const file of req.files || []) {
+      const result = await cloudinary.uploader.upload(file.path, {
+        folder: "bookmyturf/venues",
+      });
+
+      imagesUrl.push(result.secure_url);
+
+      if (fs.existsSync(file.path)) {
         fs.unlinkSync(file.path);
+      }
+    }
 
-        return result.secure_url;
-      })
-    );
-
+    // Create venue
     const venue = new venueModel({
-      name,
-      description,
+      name: name.trim(),
+      description: description.trim(),
       price: Number(price),
-      location: `${area}, ${city}`,
-      sports: JSON.parse(sports),
-      amenities: JSON.parse(amenities),
-      rating: Number(rating),
-      contact_no,
-      status,
+      location: `${area.trim()}, ${city.trim()}`,
+      sports: sports ? JSON.parse(sports) : [],
+      amenities: amenities ? JSON.parse(amenities) : [],
+      rating: Number(rating) || 0,
+      contact_no: contact_no.trim(),
+      status: status || "Available",
       images: imagesUrl,
-      date: Date.now(),
+      date: new Date(),
     });
 
     await venue.save();
 
-    res.status(200).json({
+    res.status(201).json({
       success: true,
       message: "Venue added successfully",
+      venue,
     });
-
   } catch (error) {
-    console.error(error);
+    console.error("Add Venue Error:", error);
+
     res.status(500).json({
       success: false,
       message: error.message,
@@ -69,36 +77,120 @@ const addVenue = async (req, res) => {
   }
 };
 
-
-// function for list venues
+// ===============================
+// LIST VENUES
+// ===============================
 const listVenues = async (req, res) => {
-try {
+  try {
     const venues = await venueModel.find();
-    res.status(200).json({success:true,venues});
-}catch (error) {
-    res.status(500).json({success:false,message:"Error fetching venues",error:error.message});
-}
-}
 
-//function for remove venue
+    res.status(200).json({
+      success: true,
+      venues,
+    });
+  } catch (error) {
+    console.error("List Venues Error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Error fetching venues",
+    });
+  }
+};
+
+// ===============================
+// REMOVE VENUE
+// ===============================
 const removeVenue = async (req, res) => {
-try {
-    await venueModel.findByIdAndDelete(req.body.id);
-    res.status(200).json({success:true,message:"Venue removed successfully"});
-}catch (error) {
-    res.status(500).json({success:false,message:"Error removing venue",error:error.message});
-}
-}
+  try {
+    const { id } = req.body;
 
-//function for single venue info
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid venue ID",
+      });
+    }
+
+    const venue = await venueModel.findById(id);
+
+    if (!venue) {
+      return res.status(404).json({
+        success: false,
+        message: "Venue not found",
+      });
+    }
+
+    const activeBookings = await bookingModel.countDocuments({
+      venueId: id,
+      bookingStatus: {
+        $in: ["Pending", "Confirmed"],
+      },
+    });
+
+    if (activeBookings > 0) {
+      return res.status(409).json({
+        success: false,
+        message: "Cannot remove venue because it has active bookings",
+      });
+    }
+
+    await venueModel.findByIdAndDelete(id);
+
+    res.status(200).json({
+      success: true,
+      message: "Venue removed successfully",
+    });
+  } catch (error) {
+    console.error("Remove Venue Error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Error removing venue",
+    });
+  }
+};
+
+// ===============================
+// SINGLE VENUE
+// ===============================
 const singleVenueInfo = async (req, res) => {
-    try {
-        const {venueId} = req.body;
-        const venue = await venueModel.findById(venueId);
-        res.status(200).json({success:true,venue});
-    }catch (error) {
-        res.status(500).json({success:false,message:"Error fetching venue info",error:error.message});
-    }   
-}
+  try {
+    const { venueId } = req.body;
 
-export { addVenue, listVenues, removeVenue, singleVenueInfo };
+    if (!venueId || !mongoose.Types.ObjectId.isValid(venueId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid venue ID",
+      });
+    }
+
+    const venue = await venueModel.findById(venueId);
+
+    if (!venue) {
+      return res.status(404).json({
+        success: false,
+        message: "Venue not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      venue,
+    });
+  } catch (error) {
+    console.error("Single Venue Error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Error fetching venue info",
+    });
+  }
+};
+
+export {
+  addVenue,
+  listVenues,
+  removeVenue,
+  singleVenueInfo,
+};

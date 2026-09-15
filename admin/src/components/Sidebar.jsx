@@ -2,22 +2,28 @@
 
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { FaPlus, FaListUl, FaBox, FaTimes } from "react-icons/fa";
+import { FaPlus, FaListUl, FaBox, FaTimes, FaBars } from "react-icons/fa";
 
-// We receive `isOpen` and `closeSidebar` as props from the Layout component
-const Sidebar = ({ isOpen, closeSidebar }) => {
+// We receive `isOpen`, `toggleSidebar`, and `closeSidebar` as props from the Layout component
+const Sidebar = ({ isOpen, toggleSidebar, closeSidebar }) => {
   const navLinkClasses =
     "flex items-center gap-4 px-6 py-3 text-gray-300 transition-colors duration-200 hover:text-white hover:bg-green-800 rounded-md";
   const activeLinkClasses = "bg-green-700 text-white font-semibold";
 
   return (
     <>
+      {/* Mobile / Small Screen Hamburger Toggle Button */}
+      {!isOpen && (
+        <button
+          onClick={toggleSidebar}
+          className="fixed top-3 left-4 z-50 md:hidden p-2.5 rounded-lg bg-green-900 text-white shadow-lg hover:bg-green-800 transition-all focus:outline-none"
+          aria-label="Open Sidebar"
+        >
+          <FaBars size={20} />
+        </button>
+      )}
+
       {/* The Sidebar itself */}
-      {/* 
-        - translate-x-full: Hides the sidebar off-screen to the left by default.
-        - isOpen ? 'translate-x-0' : '-translate-x-full': Slides it in on mobile when `isOpen` is true.
-        - md:translate-x-0: On medium screens and up, it's always visible (overriding the mobile transform).
-      */}
       <div
         className={`fixed top-0 left-0 h-screen w-64 bg-green-900 flex flex-col z-50 
                    transition-transform duration-300 ease-in-out 
@@ -32,20 +38,20 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
           />
           <button
             onClick={closeSidebar}
-            className="md:hidden text-gray-400 hover:text-white"
+            className="md:hidden text-gray-400 hover:text-white transition-colors"
           >
             <FaTimes size={20} />
           </button>
         </div>
 
-        {/* Navigation Links - added padding for better spacing */}
+        {/* Navigation Links */}
         <nav className="flex flex-col gap-2 p-4">
           <NavLink
             to="/add"
             className={({ isActive }) =>
               `${navLinkClasses} ${isActive ? activeLinkClasses : ""}`
             }
-            onClick={closeSidebar} // Close sidebar on link click on mobile
+            onClick={closeSidebar}
           >
             <FaPlus className="w-5 h-5 shrink-0" />
             <span>Add Venue</span>
@@ -75,10 +81,10 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
         </nav>
       </div>
 
-      {/* Overlay - shown only on mobile when the sidebar is open */}
+      {/* Overlay - shown only on mobile/small screen when the sidebar is open */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/60 z-40 md:hidden"
+          className="fixed inset-0 bg-black/60 z-40 md:hidden backdrop-blur-sm"
           onClick={closeSidebar}
         ></div>
       )}

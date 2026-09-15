@@ -14,40 +14,87 @@ import bookingRouter from "./routes/bookingRoutes.js";
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+// ===============================
+// CORS
+// ===============================
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  process.env.FRONTEND_URL,
+  process.env.ADMIN_URL,
+].filter(Boolean);
 
-connectDB();
-connectCloudinary();
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "token"],
+    credentials: true,
+  })
+);
 
 
+// ===============================
+// BODY PARSER
+// ===============================
+app.use(
+  express.json({
+    limit: "1mb",
+  }),
+);
+
+
+
+// ===============================
+// API ROUTES
+// ===============================
 app.use("/auth", AuthRouter);
 app.use("/venue", venueRouter);
 app.use("/booking", bookingRouter);
 
-// Create HTTP Server
+// ===============================
+// CREATE HTTP SERVER
+// ===============================
 const server = http.createServer(app);
 
-// Socket.IO
+// ===============================
+// SOCKET.IO
+// ===============================
 export const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 
 initSocket(io);
 
-io.on("connection", (socket) => {
- // console.log("Admin Connected:", socket.id);
 
-  socket.on("disconnect", () => {
- //   console.log("Disconnected:", socket.id);
-  });
-});
 
+// ===============================
+// START SERVER
+// ===============================
 const PORT = process.env.PORT || 5000;
 
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+const startServer = async () => {
+  try {
+    await connectDB();
+    connectCloudinary();
+
+    server.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error("Server startup failed:", error);
+    process.exit(1);
+  }
+};
+
+startServer();

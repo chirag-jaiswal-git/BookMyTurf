@@ -17,15 +17,21 @@ export const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 const App = () => {
   // --- Token Management ---
-const [token, setToken] = useState(localStorage.getItem("adminToken") || "");
+  const [token, setToken] = useState(localStorage.getItem("adminToken") || "");
 
- useEffect(() => {
-  if (token) {
-    localStorage.setItem("adminToken", token);
-  } else {
-    localStorage.removeItem("adminToken");
-  }
-}, [token]);
+  // --- Sidebar Mobile State ---
+  const [isOpen, setIsOpen] = useState(false);
+
+  const toggleSidebar = () => setIsOpen((prev) => !prev);
+  const closeSidebar = () => setIsOpen(false);
+
+  useEffect(() => {
+    if (token) {
+      localStorage.setItem("adminToken", token);
+    } else {
+      localStorage.removeItem("adminToken");
+    }
+  }, [token]);
 
   // --- Render Logic ---
 
@@ -33,7 +39,7 @@ const [token, setToken] = useState(localStorage.getItem("adminToken") || "");
     // If no token, render the centered Login page
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-        <ToastContainer autoClose={800} theme="colored" />
+        <ToastContainer autoClose={800} theme="colored" position="top-center" />
         <Login setToken={setToken} />
       </div>
     );
@@ -42,23 +48,35 @@ const [token, setToken] = useState(localStorage.getItem("adminToken") || "");
   // If token exists, render the full admin dashboard layout
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <ToastContainer autoClose={1000} theme="colored" />
+      <ToastContainer
+        position="top-center"
+        autoClose={3000}
+        hideProgressBar
+        closeOnClick
+        pauseOnHover
+      />
 
-      {/* Sidebar and Navbar are fixed and sit outside the main scrollable area */}
-      <Sidebar />
-      <Navbar setToken={setToken} />
+      {/* Sidebar with state control props */}
+      <Sidebar
+        isOpen={isOpen}
+        toggleSidebar={toggleSidebar}
+        closeSidebar={closeSidebar}
+      />
+
+      {/* Navbar sitting at the top */}
+      <Navbar setToken={setToken} toggleSidebar={toggleSidebar} />
 
       {/* Main Content Area */}
       <main className="flex-1 md:ml-64 pt-16">
-        {/* The Routes are wrapped in the main content area */}
         <Routes>
           {/* Default route redirects to a primary page */}
           <Route path="/" element={<Navigate to="/add" />} />
           <Route path="/add" element={<Add token={token} />} />
           <Route path="/list" element={<List token={token} />} />
           <Route path="/bookings" element={<Bookings token={token} />} />
-          {/* A catch-all route for any other path */}
-      
+
+          {/* Catch-all redirect to fallback route */}
+          <Route path="*" element={<Navigate to="/add" />} />
         </Routes>
       </main>
     </div>

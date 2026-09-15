@@ -108,14 +108,12 @@ export default function TurfList({ venues, resetList }) {
             <motion.div
               key={venue.id || index}
               layout
-           
               initial="hidden"
               animate="visible"
               exit="exit"
               transition={{ duration: 0.4, ease: "easeInOut" }}
               className="flex flex-col md:flex-row bg-white rounded-2xl shadow-md hover:shadow-lg transition overflow-hidden border border-gray-100"
             >
-           
               <div className="md:w-1/4 relative aspect-video md:aspect-square">
                 <img
                   src={venue.images}
