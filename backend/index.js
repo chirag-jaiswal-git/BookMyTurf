@@ -23,6 +23,8 @@ connectCloudinary();
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
+  "https://book-my-turf-jta8.vercel.app",
+  "https://book-my-turf-fawn.vercel.app",
   process.env.FRONTEND_URL,
   process.env.ADMIN_URL,
 ].filter(Boolean);
