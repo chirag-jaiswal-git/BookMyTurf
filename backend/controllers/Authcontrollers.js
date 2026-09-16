@@ -3,14 +3,19 @@ import OTP from "../models/otpModel.js";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { transporter } from "../utils/mailer.js";
+import { sendOTPEmail } from "../utils/mailer.js";
 
-// ===============================
+// =====================================================
 // SEND OTP
-// ===============================
+// =====================================================
+
 const sendOTP = async (req, res) => {
   try {
     let { email, name, phone } = req.body;
+
+    // --------------------------------
+    // Clean input
+    // --------------------------------
 
     email = email?.trim().toLowerCase();
     name = name?.trim();
@@ -19,6 +24,7 @@ const sendOTP = async (req, res) => {
     // --------------------------------
     // 1. Validate email
     // --------------------------------
+
     if (!email) {
       return res.status(400).json({
         success: false,
@@ -38,6 +44,7 @@ const sendOTP = async (req, res) => {
     // --------------------------------
     // 2. Validate phone
     // --------------------------------
+
     if (phone && !/^\d{10}$/.test(phone)) {
       return res.status(400).json({
         success: false,
@@ -48,14 +55,21 @@ const sendOTP = async (req, res) => {
     // --------------------------------
     // 3. Find existing user
     // --------------------------------
+
+    console.log("🔍 Checking user:", email);
+
     let user = await enquiryModel.findOne({ email });
+
+    console.log("👤 User found:", user ? "YES" : "NO");
 
     // --------------------------------
     // 4. Existing user
     // --------------------------------
+
     if (user) {
-      // Login only.
-      // Do not overwrite existing profile details.
+      // Existing user is logging in.
+      // Do not overwrite their profile information.
+
       if (name && name.length < 2) {
         return res.status(400).json({
           success: false,
@@ -67,6 +81,7 @@ const sendOTP = async (req, res) => {
     // --------------------------------
     // 5. New user registration
     // --------------------------------
+
     let isNewUser = false;
 
     if (!user) {
@@ -92,11 +107,14 @@ const sendOTP = async (req, res) => {
       });
 
       isNewUser = true;
+
+      console.log("✅ New user created:", email);
     }
 
     // --------------------------------
     // 6. OTP resend cooldown
     // --------------------------------
+
     const existingOTP = await OTP.findOne({ email });
 
     if (existingOTP) {
@@ -107,7 +125,7 @@ const sendOTP = async (req, res) => {
         return res.status(429).json({
           success: false,
           message: `Please wait ${Math.ceil(
-            60 - secondsSinceCreation,
+            60 - secondsSinceCreation
           )} seconds before requesting another OTP`,
         });
       }
@@ -116,16 +134,24 @@ const sendOTP = async (req, res) => {
     // --------------------------------
     // 7. Generate secure OTP
     // --------------------------------
+
     const otp = crypto.randomInt(100000, 1000000).toString();
+
+    console.log("🔐 OTP generated for:", email);
 
     const hashedOTP = await bcrypt.hash(otp, 10);
 
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
     // --------------------------------
-    // 8. Replace previous OTP
+    // 8. Delete previous OTP
     // --------------------------------
+
     await OTP.deleteMany({ email });
+
+    // --------------------------------
+    // 9. Save new OTP
+    // --------------------------------
 
     await OTP.create({
       email,
@@ -134,37 +160,33 @@ const sendOTP = async (req, res) => {
       attempts: 0,
     });
 
+    console.log("✅ OTP saved to database");
+
     // --------------------------------
-    // 9. Send OTP email
+    // 10. Send OTP using Resend
     // --------------------------------
+
     try {
-      await transporter.sendMail({
+      console.log("📤 Sending OTP email to:", email);
+
+      await sendOTPEmail({
         to: email,
-        subject: "BookMyTurf Login OTP",
-        html: `
-          <div style="font-family:Arial,sans-serif;padding:20px">
-            <h2>BookMyTurf</h2>
-
-            <p>Your OTP is:</p>
-
-            <h1>${otp}</h1>
-
-            <p>This OTP will expire in 5 minutes.</p>
-
-            <p>Do not share this OTP with anyone.</p>
-          </div>
-        `,
+        otp,
       });
-    } catch (emailError) {
-      console.error("OTP Email Error:", emailError);
 
-      // Remove OTP
+      console.log("✅ OTP email sent successfully");
+    } catch (emailError) {
+      console.error("❌ OTP Email Error:", emailError);
+
+      // Remove OTP if email could not be sent
       await OTP.deleteMany({ email });
 
       // If this was a new registration,
-      // remove the user as well.
+      // remove the newly created user
       if (isNewUser) {
-        await enquiryModel.deleteOne({ _id: user._id });
+        await enquiryModel.deleteOne({
+          _id: user._id,
+        });
       }
 
       return res.status(500).json({
@@ -173,12 +195,16 @@ const sendOTP = async (req, res) => {
       });
     }
 
+    // --------------------------------
+    // 11. Success response
+    // --------------------------------
+
     return res.status(200).json({
       success: true,
       message: "OTP sent successfully",
     });
   } catch (error) {
-    console.error("SEND OTP ERROR:", error);
+    console.error("❌ SEND OTP ERROR:", error);
 
     return res.status(500).json({
       success: false,
@@ -187,12 +213,17 @@ const sendOTP = async (req, res) => {
   }
 };
 
-// ===============================
+// =====================================================
 // VERIFY OTP
-// ===============================
+// =====================================================
+
 const verifyOTP = async (req, res) => {
   try {
     let { email, otp } = req.body;
+
+    // --------------------------------
+    // Clean input
+    // --------------------------------
 
     email = email?.trim().toLowerCase();
     otp = otp?.trim();
@@ -200,6 +231,7 @@ const verifyOTP = async (req, res) => {
     // --------------------------------
     // 1. Validate input
     // --------------------------------
+
     if (!email || !otp) {
       return res.status(400).json({
         success: false,
@@ -217,6 +249,7 @@ const verifyOTP = async (req, res) => {
     // --------------------------------
     // 2. Find OTP
     // --------------------------------
+
     const record = await OTP.findOne({ email });
 
     if (!record) {
@@ -227,10 +260,13 @@ const verifyOTP = async (req, res) => {
     }
 
     // --------------------------------
-    // 3. Check expiration
+    // 3. Check OTP expiration
     // --------------------------------
+
     if (record.expiresAt < new Date()) {
-      await OTP.deleteOne({ _id: record._id });
+      await OTP.deleteOne({
+        _id: record._id,
+      });
 
       return res.status(400).json({
         success: false,
@@ -241,19 +277,27 @@ const verifyOTP = async (req, res) => {
     // --------------------------------
     // 4. Check maximum attempts
     // --------------------------------
+
     if (record.attempts >= 5) {
-      await OTP.deleteOne({ _id: record._id });
+      await OTP.deleteOne({
+        _id: record._id,
+      });
 
       return res.status(429).json({
         success: false,
-        message: "Too many incorrect attempts. Please request a new OTP.",
+        message:
+          "Too many incorrect attempts. Please request a new OTP.",
       });
     }
 
     // --------------------------------
-    // 5. Compare OTP hash
+    // 5. Compare OTP
     // --------------------------------
-    const isMatch = await bcrypt.compare(otp, record.otp);
+
+    const isMatch = await bcrypt.compare(
+      otp,
+      record.otp
+    );
 
     if (!isMatch) {
       record.attempts += 1;
@@ -269,10 +313,15 @@ const verifyOTP = async (req, res) => {
     // --------------------------------
     // 6. Find user
     // --------------------------------
-    const user = await enquiryModel.findOne({ email });
+
+    const user = await enquiryModel.findOne({
+      email,
+    });
 
     if (!user) {
-      await OTP.deleteOne({ _id: record._id });
+      await OTP.deleteOne({
+        _id: record._id,
+      });
 
       return res.status(400).json({
         success: false,
@@ -281,13 +330,17 @@ const verifyOTP = async (req, res) => {
     }
 
     // --------------------------------
-    // 7. Delete OTP after successful use
+    // 7. Delete OTP after successful login
     // --------------------------------
-    await OTP.deleteOne({ _id: record._id });
+
+    await OTP.deleteOne({
+      _id: record._id,
+    });
 
     // --------------------------------
     // 8. Generate JWT
     // --------------------------------
+
     const token = jwt.sign(
       {
         email: user.email,
@@ -298,12 +351,17 @@ const verifyOTP = async (req, res) => {
       process.env.JWT_SECRET,
       {
         expiresIn: "7d",
-      },
+      }
     );
+
+    // --------------------------------
+    // 9. Login response
+    // --------------------------------
 
     return res.status(200).json({
       success: true,
       message: "Login successful",
+
       token,
 
       user: {
@@ -313,7 +371,7 @@ const verifyOTP = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("VERIFY OTP ERROR:", error);
+    console.error("❌ VERIFY OTP ERROR:", error);
 
     return res.status(500).json({
       success: false,
@@ -322,9 +380,10 @@ const verifyOTP = async (req, res) => {
   }
 };
 
-// ===============================
+// =====================================================
 // ADMIN LOGIN
-// ===============================
+// =====================================================
+
 const adminLogin = async (req, res) => {
   try {
     const email = req.body.email?.trim().toLowerCase();
@@ -333,6 +392,7 @@ const adminLogin = async (req, res) => {
     // --------------------------------
     // 1. Validate input
     // --------------------------------
+
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -340,12 +400,21 @@ const adminLogin = async (req, res) => {
       });
     }
 
-    const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+    // --------------------------------
+    // 2. Get admin email
+    // --------------------------------
+
+    const adminEmail =
+      process.env.ADMIN_EMAIL?.trim().toLowerCase();
 
     // --------------------------------
-    // 2. Verify credentials
+    // 3. Verify admin credentials
     // --------------------------------
-    if (email !== adminEmail || password !== process.env.ADMIN_PASSWORD) {
+
+    if (
+      email !== adminEmail ||
+      password !== process.env.ADMIN_PASSWORD
+    ) {
       return res.status(401).json({
         success: false,
         message: "Invalid admin credentials",
@@ -353,8 +422,9 @@ const adminLogin = async (req, res) => {
     }
 
     // --------------------------------
-    // 3. Generate admin JWT
+    // 4. Generate admin JWT
     // --------------------------------
+
     const token = jwt.sign(
       {
         email: adminEmail,
@@ -363,8 +433,12 @@ const adminLogin = async (req, res) => {
       process.env.JWT_SECRET,
       {
         expiresIn: "12h",
-      },
+      }
     );
+
+    // --------------------------------
+    // 5. Admin login response
+    // --------------------------------
 
     return res.status(200).json({
       success: true,
@@ -372,7 +446,7 @@ const adminLogin = async (req, res) => {
       token,
     });
   } catch (error) {
-    console.error("ADMIN LOGIN ERROR:", error);
+    console.error("❌ ADMIN LOGIN ERROR:", error);
 
     return res.status(500).json({
       success: false,
@@ -381,4 +455,92 @@ const adminLogin = async (req, res) => {
   }
 };
 
-export { sendOTP, verifyOTP, adminLogin };
+// =====================================================
+// EXPORT
+// =====================================================
+
+export {
+  sendOTP,
+  verifyOTP,
+  adminLogin,
+};
+```
+
+### Also make sure `mailer.js` is this
+
+```js
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+export const sendOTPEmail = async ({ to, otp }) => {
+  const { data, error } = await resend.emails.send({
+    from: process.env.EMAIL_FROM,
+    to: [to],
+    subject: "BookMyTurf Login OTP",
+
+    html: `
+      <div style="
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: 40px auto;
+        padding: 30px;
+        background: #f5f5f5;
+        border-radius: 12px;
+      ">
+
+        <div style="
+          background: white;
+          padding: 30px;
+          border-radius: 12px;
+        ">
+
+          <h2 style="margin-top: 0;">
+            BookMyTurf
+          </h2>
+
+          <p>
+            Your OTP for login is:
+          </p>
+
+          <h1 style="
+            font-size: 36px;
+            letter-spacing: 8px;
+            margin: 25px 0;
+          ">
+            ${otp}
+          </h1>
+
+          <p>
+            This OTP will expire in
+            <strong>5 minutes</strong>.
+          </p>
+
+          <p>
+            Do not share this OTP with anyone.
+          </p>
+
+          <p style="
+            color: #777;
+            margin-top: 30px;
+          ">
+            If you did not request this OTP,
+            you can safely ignore this email.
+          </p>
+
+        </div>
+      </div>
+    `,
+  });
+
+  if (error) {
+    console.error("❌ Resend Email Error:", error);
+    throw new Error(
+      error.message || "Failed to send email"
+    );
+  }
+
+  console.log("✅ Resend email sent:", data?.id);
+
+  return data;
+};
