@@ -51,7 +51,7 @@ return (
       {/* Logo */}
       <Link to="/" className="flex items-center space-x-2">
         <img
-          src="/images/logo1.png"
+          src="/Images/logo1.png"
           alt="BookMyTurf Logo"
           className="h-15 w-auto object-contain"
         />
