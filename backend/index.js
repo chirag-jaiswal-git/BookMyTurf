@@ -61,6 +61,10 @@ app.use("/auth", AuthRouter);
 app.use("/venue", venueRouter);
 app.use("/booking", bookingRouter);
 
+app.get("/", (req, res) => {
+  res.send("BookMyTurf Backend is running successfully 🚀");
+});
+
 // ===============================
 // CREATE HTTP SERVER
 // ===============================
