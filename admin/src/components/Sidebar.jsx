@@ -32,7 +32,7 @@ const Sidebar = ({ isOpen, toggleSidebar, closeSidebar }) => {
         {/* Logo and Close Button (for mobile) */}
         <div className="flex items-center justify-between p-6 border-b border-white/10">
           <img
-            src="/assets/AP logo.png"
+            src="/AP logo.png"
             alt="Admin Logo"
             className="h-20 w-auto object-contain"
           />
