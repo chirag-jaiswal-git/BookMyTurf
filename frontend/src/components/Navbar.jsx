@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { handleSuccess } from "../pages/utils";
 import { ToastContainer } from "react-toastify";
-import logo from "../Images/logo1.png";
+import logo from "./Images/logo1.png";
 
 export default function Navbar() {
 const [loggedInUser, setLoggedInUser] = useState('');
