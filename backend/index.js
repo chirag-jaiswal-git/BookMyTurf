@@ -13,6 +13,7 @@ import venueRouter from "./routes/venueRouter.js";
 import bookingRouter from "./routes/bookingRoutes.js";
 
 const app = express();
+app.set("trust proxy", 1);
 
 connectDB();
 connectCloudinary();
