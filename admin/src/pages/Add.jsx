@@ -93,7 +93,9 @@ const Add = ({ token }) => {
       if (image4) formData.append("images", image4);
 
       const response = await axios.post(backendURL + "/venue/add", formData, {
-        headers: { token },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       if (response.data.success) {
