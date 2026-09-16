@@ -49,20 +49,15 @@ const bookingSchema = new mongoose.Schema(
       enum: ["Pending", "Confirmed", "Completed", "Cancelled"],
       default: "Confirmed",
     },
-
-    refundStatus: {
-      type: String,
-      enum: ["Not Initiated", "Processing", "Completed", "Failed"],
-      default: "Not Initiated",
-    },
   },
   {
     timestamps: true,
   },
 );
 
-// Prevent double booking for active bookings.
+// Prevent double booking.
 // Cancelled bookings do not block the slot.
+
 bookingSchema.index(
   {
     venueId: 1,

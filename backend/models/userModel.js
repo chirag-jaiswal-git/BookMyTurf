@@ -23,6 +23,12 @@ const userSchema = new mongoose.Schema(
       required: true,
       match: /^\d{10}$/,
     },
+
+    password: {
+      type: String,
+      required: true,
+      minlength: 6,
+    },
   },
   {
     timestamps: true,

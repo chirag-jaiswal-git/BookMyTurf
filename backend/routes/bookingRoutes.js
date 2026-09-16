@@ -1,4 +1,5 @@
 import express from "express";
+
 import {
   createBooking,
   getMyBookings,
@@ -7,17 +8,30 @@ import {
   cancelBooking,
   updateRefundStatus,
 } from "../controllers/bookingController.js";
-import adminAuth from "../middleware/adminAuth.js";
-import authUser from "../middleware/userAuth.js";
 
+import userAuth from "../middleware/userAuth.js";
+import adminAuth from "../middleware/adminAuth.js";
 
 const bookingRouter = express.Router();
 
-bookingRouter.post("/create", authUser, createBooking);
-bookingRouter.get("/my", authUser, getMyBookings);
-bookingRouter.put("/cancel/:id", authUser, cancelBooking);
+// ===============================
+// USER ROUTES
+// ===============================
+
+bookingRouter.post("/create", userAuth, createBooking);
+
+bookingRouter.get("/my", userAuth, getMyBookings);
+
+bookingRouter.put("/cancel/:id", userAuth, cancelBooking);
+
+// ===============================
+// ADMIN ROUTES
+// ===============================
+
 bookingRouter.get("/all", adminAuth, getAllBookings);
+
 bookingRouter.put("/status/:id", adminAuth, updateBookingStatus);
+
 bookingRouter.put("/refund/:id", adminAuth, updateRefundStatus);
 
 export default bookingRouter;

@@ -1,40 +1,24 @@
 import jwt from "jsonwebtoken";
 
-const userAuth = async (req, res, next) => {
+const userAuth = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
-    if (!authHeader?.startsWith("Bearer ")) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
         success: false,
-        message: "Authentication required",
+        message: "Please login first",
       });
     }
 
-    const token = authHeader.substring(7).trim();
-
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: "Authentication required",
-      });
-    }
+    const token = authHeader.split(" ")[1];
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    if (!decoded.user_id || !decoded.email || decoded.role !== "user") {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid user token",
-      });
-    }
 
     req.user = decoded;
 
     next();
   } catch (error) {
-    console.error("User Auth Error:", error.message);
-
     return res.status(401).json({
       success: false,
       message: "Invalid or expired token",

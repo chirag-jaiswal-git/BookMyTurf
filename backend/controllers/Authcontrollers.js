@@ -1,397 +1,155 @@
-import enquiryModel from "../models/userModel.js";
-import OTP from "../models/otpModel.js";
-import crypto from "crypto";
+import userModel from "../models/userModel.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { sendOTPEmail } from "../utils/mailer.js";
+import passport from "../config/passport.js";
 
-// =====================================================
-// SEND OTP
-// =====================================================
+// ===============================
+// SIGNUP
+// ===============================
 
-const sendOTP = async (req, res) => {
+const signup = async (req, res) => {
   try {
-    let { email, name, phone } = req.body;
+    let { name, email, phone, password, confirmPassword } = req.body;
 
-    // --------------------------------
-    // Clean input
-    // --------------------------------
-
-    email = email?.trim().toLowerCase();
     name = name?.trim();
+    email = email?.trim().toLowerCase();
     phone = phone?.trim();
 
-    // --------------------------------
-    // 1. Validate email
-    // --------------------------------
-
-    if (!email) {
+    if (!name || !email || !phone || !password || !confirmPassword) {
       return res.status(400).json({
         success: false,
-        message: "Email is required",
+        message: "All fields are required",
       });
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!emailRegex.test(email)) {
+    if (password !== confirmPassword) {
       return res.status(400).json({
         success: false,
-        message: "Invalid email address",
+        message: "Passwords do not match",
       });
     }
 
-    // --------------------------------
-    // 2. Validate phone
-    // --------------------------------
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters",
+      });
+    }
 
-    if (phone && !/^\d{10}$/.test(phone)) {
+    if (!/^\d{10}$/.test(phone)) {
       return res.status(400).json({
         success: false,
         message: "Phone number must be exactly 10 digits",
       });
     }
 
-    // --------------------------------
-    // 3. Find existing user
-    // --------------------------------
+    const existingUser = await userModel.findOne({ email });
 
-    console.log("🔍 Checking user:", email);
-
-    let user = await enquiryModel.findOne({ email });
-
-    console.log("👤 User found:", user ? "YES" : "NO");
-
-    // --------------------------------
-    // 4. Existing user
-    // --------------------------------
-
-    if (user) {
-      // Existing user is logging in.
-      // Do not overwrite their profile information.
-
-      if (name && name.length < 2) {
-        return res.status(400).json({
-          success: false,
-          message: "Name must contain at least 2 characters",
-        });
-      }
-    }
-
-    // --------------------------------
-    // 5. New user registration
-    // --------------------------------
-
-    let isNewUser = false;
-
-    if (!user) {
-      if (!name || !phone) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Name and 10-digit phone number are required for registration",
-        });
-      }
-
-      if (name.length < 2 || name.length > 100) {
-        return res.status(400).json({
-          success: false,
-          message: "Name must be between 2 and 100 characters",
-        });
-      }
-
-      user = await enquiryModel.create({
-        name,
-        email,
-        phone,
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        message: "User already exists. Please login.",
       });
-
-      isNewUser = true;
-
-      console.log("✅ New user created:", email);
     }
 
-    // --------------------------------
-    // 6. OTP resend cooldown
-    // --------------------------------
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    const existingOTP = await OTP.findOne({ email });
-
-    if (existingOTP) {
-      const secondsSinceCreation =
-        (Date.now() - existingOTP.createdAt.getTime()) / 1000;
-
-      if (secondsSinceCreation < 60) {
-        return res.status(429).json({
-          success: false,
-          message: `Please wait ${Math.ceil(
-            60 - secondsSinceCreation
-          )} seconds before requesting another OTP`,
-        });
-      }
-    }
-
-    // --------------------------------
-    // 7. Generate secure OTP
-    // --------------------------------
-
-    const otp = crypto.randomInt(100000, 1000000).toString();
-
-    console.log("🔐 OTP generated for:", email);
-
-    const hashedOTP = await bcrypt.hash(otp, 10);
-
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
-
-    // --------------------------------
-    // 8. Delete previous OTP
-    // --------------------------------
-
-    await OTP.deleteMany({ email });
-
-    // --------------------------------
-    // 9. Save new OTP
-    // --------------------------------
-
-    await OTP.create({
+    const user = await userModel.create({
+      name,
       email,
-      otp: hashedOTP,
-      expiresAt,
-      attempts: 0,
+      phone,
+      password: hashedPassword,
     });
-
-    console.log("✅ OTP saved to database");
-
-    // --------------------------------
-    // 10. Send OTP using Resend
-    // --------------------------------
-
-    try {
-      console.log("📤 Sending OTP email to:", email);
-
-      await sendOTPEmail({
-        to: email,
-        otp,
-      });
-
-      console.log("✅ OTP email sent successfully");
-    } catch (emailError) {
-      console.error("❌ OTP Email Error:", emailError);
-
-      // Remove OTP if email could not be sent
-      await OTP.deleteMany({ email });
-
-      // If this was a new registration,
-      // remove the newly created user
-      if (isNewUser) {
-        await enquiryModel.deleteOne({
-          _id: user._id,
-        });
-      }
-
-      return res.status(500).json({
-        success: false,
-        message: "Unable to send OTP. Please try again.",
-      });
-    }
-
-    // --------------------------------
-    // 11. Success response
-    // --------------------------------
-
-    return res.status(200).json({
-      success: true,
-      message: "OTP sent successfully",
-    });
-  } catch (error) {
-    console.error("❌ SEND OTP ERROR:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
-  }
-};
-
-// =====================================================
-// VERIFY OTP
-// =====================================================
-
-const verifyOTP = async (req, res) => {
-  try {
-    let { email, otp } = req.body;
-
-    // --------------------------------
-    // Clean input
-    // --------------------------------
-
-    email = email?.trim().toLowerCase();
-    otp = otp?.trim();
-
-    // --------------------------------
-    // 1. Validate input
-    // --------------------------------
-
-    if (!email || !otp) {
-      return res.status(400).json({
-        success: false,
-        message: "Email and OTP are required",
-      });
-    }
-
-    if (!/^\d{6}$/.test(otp)) {
-      return res.status(400).json({
-        success: false,
-        message: "OTP must be 6 digits",
-      });
-    }
-
-    // --------------------------------
-    // 2. Find OTP
-    // --------------------------------
-
-    const record = await OTP.findOne({ email });
-
-    if (!record) {
-      return res.status(400).json({
-        success: false,
-        message: "OTP not found or expired",
-      });
-    }
-
-    // --------------------------------
-    // 3. Check OTP expiration
-    // --------------------------------
-
-    if (record.expiresAt < new Date()) {
-      await OTP.deleteOne({
-        _id: record._id,
-      });
-
-      return res.status(400).json({
-        success: false,
-        message: "OTP expired",
-      });
-    }
-
-    // --------------------------------
-    // 4. Check maximum attempts
-    // --------------------------------
-
-    if (record.attempts >= 5) {
-      await OTP.deleteOne({
-        _id: record._id,
-      });
-
-      return res.status(429).json({
-        success: false,
-        message:
-          "Too many incorrect attempts. Please request a new OTP.",
-      });
-    }
-
-    // --------------------------------
-    // 5. Compare OTP
-    // --------------------------------
-
-    const isMatch = await bcrypt.compare(
-      otp,
-      record.otp
-    );
-
-    if (!isMatch) {
-      record.attempts += 1;
-
-      await record.save();
-
-      return res.status(400).json({
-        success: false,
-        message: "Invalid OTP",
-      });
-    }
-
-    // --------------------------------
-    // 6. Find user
-    // --------------------------------
-
-    const user = await enquiryModel.findOne({
-      email,
-    });
-
-    if (!user) {
-      await OTP.deleteOne({
-        _id: record._id,
-      });
-
-      return res.status(400).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    // --------------------------------
-    // 7. Delete OTP after successful login
-    // --------------------------------
-
-    await OTP.deleteOne({
-      _id: record._id,
-    });
-
-    // --------------------------------
-    // 8. Generate JWT
-    // --------------------------------
 
     const token = jwt.sign(
       {
-        email: user.email,
         user_id: user._id.toString(),
         name: user.name,
-        role: "user",
+        email: user.email,
       },
       process.env.JWT_SECRET,
       {
         expiresIn: "7d",
-      }
+      },
     );
 
-    // --------------------------------
-    // 9. Login response
-    // --------------------------------
-
-    return res.status(200).json({
+    res.status(201).json({
       success: true,
-      message: "Login successful",
-
+      message: "Account created successfully",
       token,
-
       user: {
+        id: user._id,
         name: user.name,
         email: user.email,
         phone: user.phone,
       },
     });
   } catch (error) {
-    console.error("❌ VERIFY OTP ERROR:", error);
+    console.error("Signup Error:", error);
 
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: "Server error",
     });
   }
 };
 
-// =====================================================
+// ===============================
+// LOGIN
+// ===============================
+
+const login = (req, res, next) => {
+  passport.authenticate("local", (error, user, info) => {
+    if (error) {
+      console.error("Login Error:", error);
+
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+      });
+    }
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: info?.message || "Invalid email or password",
+      });
+    }
+
+    const token = jwt.sign(
+      {
+        user_id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "7d",
+      },
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Login successful",
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+      },
+    });
+  })(req, res, next);
+};
+
+// ===============================
 // ADMIN LOGIN
-// =====================================================
+// ===============================
 
 const adminLogin = async (req, res) => {
   try {
     const email = req.body.email?.trim().toLowerCase();
     const password = req.body.password;
-
-    // --------------------------------
-    // 1. Validate input
-    // --------------------------------
 
     if (!email || !password) {
       return res.status(400).json({
@@ -400,19 +158,8 @@ const adminLogin = async (req, res) => {
       });
     }
 
-    // --------------------------------
-    // 2. Get admin email
-    // --------------------------------
-
-    const adminEmail =
-      process.env.ADMIN_EMAIL?.trim().toLowerCase();
-
-    // --------------------------------
-    // 3. Verify admin credentials
-    // --------------------------------
-
     if (
-      email !== adminEmail ||
+      email !== process.env.ADMIN_EMAIL?.toLowerCase() ||
       password !== process.env.ADMIN_PASSWORD
     ) {
       return res.status(401).json({
@@ -421,46 +168,30 @@ const adminLogin = async (req, res) => {
       });
     }
 
-    // --------------------------------
-    // 4. Generate admin JWT
-    // --------------------------------
-
     const token = jwt.sign(
       {
-        email: adminEmail,
-        role: "admin",
+        email,
+        isAdmin: true,
       },
       process.env.JWT_SECRET,
       {
         expiresIn: "12h",
-      }
+      },
     );
 
-    // --------------------------------
-    // 5. Admin login response
-    // --------------------------------
-
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       message: "Admin login successful",
       token,
     });
   } catch (error) {
-    console.error("❌ ADMIN LOGIN ERROR:", error);
+    console.error("Admin Login Error:", error);
 
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: "Server error",
     });
   }
 };
 
-// =====================================================
-// EXPORT
-// =====================================================
-
-export {
-  sendOTP,
-  verifyOTP,
-  adminLogin,
-};
+export { signup, login, adminLogin };

@@ -3,17 +3,24 @@ import cors from "cors";
 import "dotenv/config.js";
 import http from "http";
 import { Server } from "socket.io";
-import { initSocket } from "./socket.js";
 
 import connectDB from "./config/mongodb.js";
 import connectCloudinary from "./config/cloudinary.js";
+import { initSocket } from "./socket.js";
+
+import passport from "./config/passport.js";
 
 import AuthRouter from "./routes/AuthRouter.js";
 import venueRouter from "./routes/venueRouter.js";
 import bookingRouter from "./routes/bookingRoutes.js";
 
 const app = express();
+
 app.set("trust proxy", 1);
+
+// ===============================
+// DATABASE & CLOUDINARY
+// ===============================
 
 connectDB();
 connectCloudinary();
@@ -21,6 +28,7 @@ connectCloudinary();
 // ===============================
 // CORS
 // ===============================
+
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
@@ -39,43 +47,55 @@ app.use(
         callback(new Error("Not allowed by CORS"));
       }
     },
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "token"],
-    credentials: true,
-  })
-);
 
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+
+    allowedHeaders: ["Content-Type", "Authorization"],
+
+    credentials: true,
+  }),
+);
 
 // ===============================
 // BODY PARSER
 // ===============================
-app.use(
-  express.json({
-    limit: "1mb",
-  }),
-);
 
+app.use(express.json());
 
+// ===============================
+// PASSPORT
+// ===============================
+
+app.use(passport.initialize());
 
 // ===============================
 // API ROUTES
 // ===============================
+
 app.use("/auth", AuthRouter);
+
 app.use("/venue", venueRouter);
+
 app.use("/booking", bookingRouter);
+
+// ===============================
+// TEST ROUTE
+// ===============================
 
 app.get("/", (req, res) => {
   res.send("BookMyTurf Backend is running successfully 🚀");
 });
 
 // ===============================
-// CREATE HTTP SERVER
+// HTTP SERVER
 // ===============================
+
 const server = http.createServer(app);
 
 // ===============================
 // SOCKET.IO
 // ===============================
+
 export const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
@@ -86,22 +106,12 @@ export const io = new Server(server, {
 
 initSocket(io);
 
-
-
 // ===============================
 // START SERVER
 // ===============================
+
 const PORT = process.env.PORT || 5000;
 
-const startServer = async () => {
-  try {
-    server.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  } catch (error) {
-    console.error("Server startup failed:", error);
-    process.exit(1);
-  }
-};
-
-startServer();
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});

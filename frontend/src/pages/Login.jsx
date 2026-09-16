@@ -1,5 +1,5 @@
-import OTPAuth from "../components/OTPAuth";
+import Auth from "../components/Auth";
 
-const Login = () => <OTPAuth mode="login" />;
+const Login = () => <Auth mode="login" />;
 
 export default Login;

@@ -1,21 +1,17 @@
 import bookingModel from "../models/bookingModel.js";
 import mongoose from "mongoose";
 import venueModel from "../models/venueModel.js";
-import {
-  sendBookingConfirmationEmail,
-  sendCancellationEmail,
-} from "../utils/bookingEmails.js";
 
 import { getIO } from "../socket.js";
 
 // ===============================
 // CREATE BOOKING
 // ===============================
+
 export const createBooking = async (req, res) => {
   try {
     const { venueId, bookingDate, timeSlot } = req.body;
 
-    // Validate required fields
     if (!venueId || !bookingDate || !timeSlot) {
       return res.status(400).json({
         success: false,
@@ -23,14 +19,6 @@ export const createBooking = async (req, res) => {
       });
     }
 
-    if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-      });
-    }
-
-    // Validate venue
     const venue = await venueModel.findById(venueId);
 
     if (!venue) {
@@ -40,9 +28,6 @@ export const createBooking = async (req, res) => {
       });
     }
 
-    // ===============================
-    // CALCULATE PRICE ON SERVER
-    // ===============================
     const [from, to] = timeSlot.split("-");
 
     const startHour = Number(from.split(":")[0]);
@@ -59,9 +44,6 @@ export const createBooking = async (req, res) => {
 
     const totalPrice = duration * Number(venue.price);
 
-    // ===============================
-    // CREATE BOOKING
-    // ===============================
     const newBooking = await bookingModel.create({
       venueId,
       userId: req.user.user_id,
@@ -73,18 +55,9 @@ export const createBooking = async (req, res) => {
     });
 
     // ===============================
-    // SEND BOOKING EMAIL
+    // ADMIN SOCKET NOTIFICATION
     // ===============================
-    sendBookingConfirmationEmail({
-      ...newBooking._doc,
-      venueName: venue.name,
-    }).catch((err) => {
-      console.error("Email error:", err);
-    });
 
-    // ===============================
-    // SOCKET.IO ADMIN NOTIFICATION
-    // ===============================
     try {
       const io = getIO();
 
@@ -98,15 +71,10 @@ export const createBooking = async (req, res) => {
         totalPrice: newBooking.totalPrice,
         bookingStatus: newBooking.bookingStatus,
       });
-
-    //  console.log("🔔 Admin booking notification sent");
     } catch (socketError) {
       console.error("Socket Notification Error:", socketError);
     }
 
-    // ===============================
-    // RESPONSE
-    // ===============================
     res.status(201).json({
       success: true,
       message: "Booking created successfully",
@@ -115,7 +83,6 @@ export const createBooking = async (req, res) => {
   } catch (error) {
     console.error("BOOKING ERROR:", error);
 
-    // Duplicate booking
     if (error.code === 11000) {
       return res.status(409).json({
         success: false,
@@ -125,17 +92,21 @@ export const createBooking = async (req, res) => {
 
     res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Server error",
     });
   }
 };
+
 // ===============================
-// GET USER BOOKINGS
+// GET MY BOOKINGS
 // ===============================
+
 export const getMyBookings = async (req, res) => {
   try {
     const bookings = await bookingModel
-      .find({ userId: req.user.user_id })
+      .find({
+        userId: req.user.user_id,
+      })
       .populate("venueId")
       .sort({ createdAt: -1 });
 
@@ -154,8 +125,10 @@ export const getMyBookings = async (req, res) => {
 };
 
 // ===============================
-// GET ALL BOOKINGS (ADMIN)
+// GET ALL BOOKINGS
+// ADMIN
 // ===============================
+
 export const getAllBookings = async (req, res) => {
   try {
     const bookings = await bookingModel
@@ -180,7 +153,9 @@ export const getAllBookings = async (req, res) => {
 
 // ===============================
 // UPDATE BOOKING STATUS
+// ADMIN
 // ===============================
+
 export const updateBookingStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -225,7 +200,9 @@ export const updateBookingStatus = async (req, res) => {
 
 // ===============================
 // CANCEL BOOKING
+// USER
 // ===============================
+
 export const cancelBooking = async (req, res) => {
   try {
     const { id } = req.params;
@@ -260,17 +237,9 @@ export const cancelBooking = async (req, res) => {
       });
     }
 
-    const venue = await venueModel.findById(booking.venueId);
-
     booking.bookingStatus = "Cancelled";
-    booking.refundStatus = "Processing";
 
     await booking.save();
-
-    sendCancellationEmail({
-      ...booking._doc,
-      venueName: venue?.name || "N/A",
-    }).catch((err) => console.error("Cancel Email Error:", err));
 
     res.status(200).json({
       success: true,
@@ -289,7 +258,9 @@ export const cancelBooking = async (req, res) => {
 
 // ===============================
 // UPDATE REFUND STATUS
+// ADMIN
 // ===============================
+
 export const updateRefundStatus = async (req, res) => {
   try {
     const { id } = req.params;

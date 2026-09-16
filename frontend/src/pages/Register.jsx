@@ -1,5 +1,5 @@
-import OTPAuth from "../components/OTPAuth";
+import Auth from "../components/Auth";
 
-const Register = () => <OTPAuth mode="register" />;
+const Register = () => <Auth mode="register" />;
 
 export default Register;

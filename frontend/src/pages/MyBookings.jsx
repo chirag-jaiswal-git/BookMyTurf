@@ -1,4 +1,3 @@
-// pages/MyBookings.jsx
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -24,9 +23,7 @@ export default function MyBookings() {
 
   const navigate = useNavigate();
 
-  // ===============================
   // FORMAT TIME SLOT
-  // ===============================
   const formatTimeSlot = (slot) => {
     if (!slot) return "";
 
@@ -50,9 +47,7 @@ export default function MyBookings() {
     return `${formatTime(start)} - ${formatTime(end)}`;
   };
 
-  // ===============================
   // VIEW TURF DETAILS
-  // ===============================
   const handleViewDetails = (venue) => {
     if (!venue?._id) return;
 
@@ -61,9 +56,7 @@ export default function MyBookings() {
     });
   };
 
-  // ===============================
   // FETCH MY BOOKINGS
-  // ===============================
   useEffect(() => {
     const fetchBookings = async () => {
       const token = localStorage.getItem("token");
@@ -103,9 +96,7 @@ export default function MyBookings() {
     fetchBookings();
   }, [backendURL, navigate]);
 
-  // ===============================
   // CANCEL BOOKING
-  // ===============================
   const handleCancel = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -133,7 +124,6 @@ export default function MyBookings() {
             ? {
                 ...booking,
                 bookingStatus: "Cancelled",
-                refundStatus: "Processing",
               }
             : booking,
         ),
@@ -154,13 +144,13 @@ export default function MyBookings() {
         return;
       }
 
-      toast.error(error.response?.data?.message || "Failed to cancel booking");
+      toast.error(
+        error.response?.data?.message || "Failed to cancel booking",
+      );
     }
   };
 
-  // ===============================
   // ANIMATION VARIANTS
-  // ===============================
   const containerVariants = {
     hidden: {
       opacity: 0,
@@ -199,9 +189,8 @@ export default function MyBookings() {
   return (
     <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 bg-emerald-700 text-gray-900">
       <div className="max-w-5xl mx-auto">
-        {/* ===============================
-            HEADER
-        =============================== */}
+
+        {/* HEADER */}
         <div className="flex items-center gap-4 mb-8 border-b border-gray-200 pb-6">
           <div className="p-4 bg-emerald-100 rounded-full shadow-sm">
             <Ticket className="text-emerald-600 w-7 h-7" />
@@ -218,9 +207,7 @@ export default function MyBookings() {
           </div>
         </div>
 
-        {/* ===============================
-            EMPTY STATE
-        =============================== */}
+        {/* EMPTY STATE */}
         {bookings.length === 0 ? (
           <motion.div
             initial={{
@@ -254,9 +241,7 @@ export default function MyBookings() {
             </Link>
           </motion.div>
         ) : (
-          /* ===============================
-             BOOKING LIST
-          =============================== */
+          /* BOOKING LIST */
           <motion.div
             className="space-y-6"
             variants={containerVariants}
@@ -273,9 +258,8 @@ export default function MyBookings() {
                   className="group relative bg-white rounded-2xl border border-gray-200 overflow-hidden hover:border-emerald-300 transition-all duration-300 shadow-md hover:shadow-xl"
                 >
                   <div className="flex flex-col md:flex-row">
-                    {/* ===============================
-                        LEFT - DATE
-                    =============================== */}
+
+                    {/* DATE */}
                     <div className="bg-emerald-600 p-6 flex flex-col items-center justify-center text-white min-w-[150px] relative overflow-hidden">
                       <div
                         className="absolute inset-0 opacity-10"
@@ -297,10 +281,9 @@ export default function MyBookings() {
                       </span>
                     </div>
 
-                    {/* ===============================
-                        CENTER - DETAILS
-                    =============================== */}
+                    {/* DETAILS */}
                     <div className="flex-grow p-6 flex flex-col justify-center">
+
                       {/* Venue + Status */}
                       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-3">
                         <h2
@@ -310,49 +293,38 @@ export default function MyBookings() {
                           {b.venueId?.name || "Turf"}
                         </h2>
 
-                        <div className="flex flex-wrap gap-2">
-                          {/* Booking Status */}
-                          <span
-                            className={`text-xs font-extrabold px-3 py-1 rounded-full border ${
-                              b.bookingStatus === "Cancelled"
-                                ? "bg-red-100 text-red-600 border-red-200"
-                                : b.bookingStatus === "Completed"
-                                  ? "bg-blue-100 text-blue-600 border-blue-200"
-                                  : "bg-green-100 text-green-600 border-green-200"
-                            }`}
-                          >
-                            {b.bookingStatus}
-                          </span>
-
-                          {/* Refund Status */}
-                          {b.bookingStatus === "Cancelled" && (
-                            <span
-                              className={`text-xs font-extrabold px-3 py-1 rounded-full border ${
-                                b.refundStatus === "Processing"
-                                  ? "bg-yellow-100 text-yellow-700 border-yellow-200"
-                                  : b.refundStatus === "Completed"
-                                    ? "bg-green-100 text-green-600 border-green-200"
-                                    : "bg-gray-100 text-gray-600 border-gray-200"
-                              }`}
-                            >
-                              Refund: {b.refundStatus || "Not Initiated"}
-                            </span>
-                          )}
-                        </div>
+                        <span
+                          className={`text-xs font-extrabold px-3 py-1 rounded-full border ${
+                            b.bookingStatus === "Cancelled"
+                              ? "bg-red-100 text-red-600 border-red-200"
+                              : b.bookingStatus === "Completed"
+                                ? "bg-blue-100 text-blue-600 border-blue-200"
+                                : "bg-green-100 text-green-600 border-green-200"
+                          }`}
+                        >
+                          {b.bookingStatus}
+                        </span>
                       </div>
 
                       {/* Location */}
                       <div className="flex items-center text-gray-500 text-sm mb-5 font-medium">
-                        <MapPin size={16} className="mr-1 text-emerald-500" />
+                        <MapPin
+                          size={16}
+                          className="mr-1 text-emerald-500"
+                        />
 
                         {b.venueId?.location || "Location not available"}
                       </div>
 
                       {/* Time + Price */}
                       <div className="flex flex-wrap gap-4 pt-4 border-t border-gray-100">
+
                         {/* Time */}
                         <div className="flex items-center gap-2 text-gray-700 bg-gray-50 px-4 py-2 rounded-lg border border-gray-100 font-semibold">
-                          <Clock size={18} className="text-emerald-600" />
+                          <Clock
+                            size={18}
+                            className="text-emerald-600"
+                          />
 
                           <span className="text-sm">
                             {formatTimeSlot(b.timeSlot)}
@@ -361,18 +333,23 @@ export default function MyBookings() {
 
                         {/* Price */}
                         <div className="flex items-center gap-2 text-gray-700 bg-gray-50 px-4 py-2 rounded-lg border border-gray-100 font-semibold">
-                          <IndianRupee size={18} className="text-emerald-600" />
+                          <IndianRupee
+                            size={18}
+                            className="text-emerald-600"
+                          />
 
-                          <span className="text-sm">₹{b.totalPrice}</span>
+                          <span className="text-sm">
+                            ₹{b.totalPrice}
+                          </span>
                         </div>
                       </div>
                     </div>
 
-                    {/* ===============================
-                        RIGHT - ACTIONS
-                    =============================== */}
+                    {/* ACTIONS */}
                     <div className="p-6 flex items-center justify-center border-t md:border-t-0 md:border-l border-gray-100 bg-gray-50/50">
-                      {["Pending", "Confirmed"].includes(b.bookingStatus) && (
+                      {["Pending", "Confirmed"].includes(
+                        b.bookingStatus,
+                      ) && (
                         <motion.button
                           whileHover={{
                             scale: 1.05,
@@ -404,9 +381,7 @@ export default function MyBookings() {
         )}
       </div>
 
-      {/* ===============================
-          CONFIRMATION MODAL
-      =============================== */}
+      {/* CONFIRMATION MODAL */}
       <ConfirmationModal
         isOpen={isModalOpen}
         onClose={() => {
@@ -414,7 +389,7 @@ export default function MyBookings() {
           setSelectedBookingId(null);
         }}
         title="Cancel Booking?"
-        message="Are you sure you want to cancel this booking? The refund status will be updated by the administrator."
+        message="Are you sure you want to cancel this booking?"
         onConfirm={handleCancel}
       />
     </div>
