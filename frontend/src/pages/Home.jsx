@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import bgImage from "../Images/Bg turg.jpg";
+import bgImage from "../Images/Bg turf.jpg";
 
 export default function Home() {
   return (
