@@ -4,9 +4,7 @@ import bookingModel from "../models/bookingModel.js";
 import mongoose from "mongoose";
 import fs from "fs";
 
-// ===============================
 // ADD VENUE
-// ===============================
 const addVenue = async (req, res) => {
   try {
     const {
@@ -22,7 +20,6 @@ const addVenue = async (req, res) => {
       status,
     } = req.body;
 
-    // Required fields
     if (!name || !area || !city || !description || !price || !contact_no) {
       return res.status(400).json({
         success: false,
@@ -30,7 +27,6 @@ const addVenue = async (req, res) => {
       });
     }
 
-    // Upload images
     const imagesUrl = [];
 
     for (const file of req.files || []) {
@@ -45,8 +41,7 @@ const addVenue = async (req, res) => {
       }
     }
 
-    // Create venue
-    const venue = new venueModel({
+    const venue = await venueModel.create({
       name: name.trim(),
       description: description.trim(),
       price: Number(price),
@@ -60,8 +55,6 @@ const addVenue = async (req, res) => {
       date: new Date(),
     });
 
-    await venue.save();
-
     res.status(201).json({
       success: true,
       message: "Venue added successfully",
@@ -72,14 +65,12 @@ const addVenue = async (req, res) => {
 
     res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Failed to add venue",
     });
   }
 };
 
-// ===============================
 // LIST VENUES
-// ===============================
 const listVenues = async (req, res) => {
   try {
     const venues = await venueModel.find();
@@ -98,9 +89,7 @@ const listVenues = async (req, res) => {
   }
 };
 
-// ===============================
 // REMOVE VENUE
-// ===============================
 const removeVenue = async (req, res) => {
   try {
     const { id } = req.body;
@@ -151,9 +140,7 @@ const removeVenue = async (req, res) => {
   }
 };
 
-// ===============================
 // SINGLE VENUE
-// ===============================
 const singleVenueInfo = async (req, res) => {
   try {
     const { venueId } = req.body;
@@ -188,9 +175,4 @@ const singleVenueInfo = async (req, res) => {
   }
 };
 
-export {
-  addVenue,
-  listVenues,
-  removeVenue,
-  singleVenueInfo,
-};
+export { addVenue, listVenues, removeVenue, singleVenueInfo };
