@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { handleSuccess } from "../pages/utils";
 import { ToastContainer } from "react-toastify";
+import logo from "../Images/logo1.png";
 
 export default function Navbar() {
 const [loggedInUser, setLoggedInUser] = useState('');
@@ -51,7 +52,7 @@ return (
       {/* Logo */}
       <Link to="/" className="flex items-center space-x-2">
         <img
-          src="/Images/logo1.png"
+          src={logo}
           alt="BookMyTurf Logo"
           className="h-15 w-auto object-contain"
         />

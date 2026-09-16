@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
+import bgImage from "../Images/Bg turg.jpg";
 
 export default function Home() {
   return (
     <section
       className="relative bg-cover bg-center bg-no-repeat h-[100vh] flex items-center justify-center"
       style={{
-        backgroundImage: "url('/Images/Bg turg.jpg')",
+        backgroundImage: `url(${bgImage})`,
         backgroundAttachment: "fixed", // Parallax effect
       }}
     >
