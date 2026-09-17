@@ -1,53 +1,62 @@
 # ⚽ BookMyTurf — Turf Booking Platform
 
-A full-stack **MERN-based sports venue booking platform** that enables users to discover sports turfs, book available time slots, and manage their bookings with secure **email/password authentication**. The project also includes a dedicated **Admin Dashboard** for managing venues, bookings, booking statuses, and real-time booking notifications.
+A full-stack **MERN-based sports turf booking platform** that enables users to discover sports venues, view available slots, make bookings, and manage their reservations. The platform includes secure **email/password authentication**, JWT-protected routes, booking cancellation, and a dedicated **Admin Dashboard** for venue and booking management with real-time notifications.
 
-## 🚀 Live Features
+## 🌐 Live Demo
 
-### 👤 User Features
+**User Website:**
+https://book-my-turf-jta8.vercel.app/
+
+**GitHub Repository:**
+https://github.com/chirag-jaiswal-git/BookMyTurf
+
+---
+
+# 🚀 Features
+
+## 👤 User Features
 
 * 🔐 Secure Email/Password Authentication
 * 📝 User Registration and Login
 * 🏟️ Browse Available Sports Turfs
-* 🔍 Search and Select Sports Venues
-* 📅 Select Booking Date and Time Slot
+* 🔍 Explore Sports Venues
 * 📖 View Detailed Turf Information
-* 🎟️ Book Sports Venues
+* 📅 Select Booking Date
+* ⏰ Select Available Time Slots
+* 🎟️ Book Sports Turfs
+* 💰 Automatic Booking Price Calculation
 * 📋 View Personal Bookings
 * ❌ Cancel Bookings
-* 🔒 Protected Routes using JWT Authentication
+* 🔒 JWT-Protected User Routes
+* 📱 Responsive User Interface
 
-### 🛠️ Admin Features
+## 🛠️ Admin Features
 
 * 📊 Dedicated Admin Dashboard
-* ➕ Add New Venues
+* 🔐 Secure Admin Authentication
+* ➕ Add New Sports Venues
+* 🖼️ Upload Venue Images
+* ☁️ Cloudinary Image Storage
 * 🗑️ Remove Venues
 * 📋 View All Bookings
 * 🔄 Update Booking Status
 * 🔔 Real-Time New Booking Notifications
 * 📡 Real-Time Communication using Socket.IO
 
-## 🖼️ Screenshots
+## ⚡ Booking System
 
-### 🏠 Home Page
+The booking system supports:
 
-![Home Page](./screenshots/home.png)
+* Date-based bookings
+* Time-slot selection
+* Automatic price calculation
+* Duplicate time-slot prevention
+* Booking status management
+* User-specific booking history
+* Booking cancellation
+* MongoDB-based persistent booking data
 
-### 🔐 Authentication
-
-![Authentication](./screenshots/auth.png)
-
-### 🏟️ Turf Details
-
-![Turf Details](./screenshots/turf-details.png)
-
-### 📋 My Bookings
-
-![My Bookings](./screenshots/my-bookings.png)
-
-### 🛠️ Admin Dashboard
-
-![Admin Dashboard](./screenshots/admin-dashboard.png)
+---
 
 # 🧰 Tech Stack
 
@@ -82,6 +91,38 @@ A full-stack **MERN-based sports venue booking platform** that enables users to 
 * Tailwind CSS
 * Axios
 * Socket.IO Client
+
+---
+
+# 🏗️ Application Architecture
+
+```text
+                    ┌─────────────────────┐
+                    │     User Frontend   │
+                    │   React + Vite      │
+                    └──────────┬──────────┘
+                               │
+                               │ REST API
+                               ▼
+                    ┌─────────────────────┐
+                    │    Express Server   │
+                    │       Node.js       │
+                    └──────┬────────┬─────┘
+                           │        │
+                ┌──────────┘        └──────────┐
+                ▼                              ▼
+       ┌─────────────────┐            ┌─────────────────┐
+       │    MongoDB      │            │   Cloudinary    │
+       │   Database      │            │ Venue Images    │
+       └─────────────────┘            └─────────────────┘
+                           │
+                           │ Socket.IO
+                           ▼
+                    ┌─────────────────────┐
+                    │    Admin Panel      │
+                    │   React + Vite      │
+                    └─────────────────────┘
+```
 
 ---
 
@@ -124,6 +165,8 @@ BookMyTurf/
 └── README.md
 ```
 
+---
+
 # ⚙️ Installation and Setup
 
 ## 1️⃣ Clone the Repository
@@ -131,8 +174,6 @@ BookMyTurf/
 ```bash
 git clone https://github.com/chirag-jaiswal-git/BookMyTurf.git
 ```
-
-Move into the project directory:
 
 ```bash
 cd BookMyTurf
@@ -167,7 +208,7 @@ FRONTEND_URL=http://localhost:5173
 ADMIN_URL=http://localhost:5174
 ```
 
-Start the backend server:
+Start the backend:
 
 ```bash
 npm run server
@@ -181,7 +222,7 @@ npm start
 
 ---
 
-## 3️⃣ Setup User Frontend
+# 3️⃣ Setup User Frontend
 
 Open a new terminal:
 
@@ -190,7 +231,7 @@ cd frontend
 npm install
 ```
 
-Create a `.env` file:
+Create `.env`:
 
 ```env
 VITE_BACKEND_URL=http://localhost:4000
@@ -202,9 +243,15 @@ Start the frontend:
 npm run dev
 ```
 
+The frontend will normally run at:
+
+```text
+http://localhost:5173
+```
+
 ---
 
-## 4️⃣ Setup Admin Panel
+# 4️⃣ Setup Admin Panel
 
 Open another terminal:
 
@@ -219,48 +266,74 @@ Start the admin panel:
 npm run dev
 ```
 
+The admin panel will normally run at:
+
+```text
+http://localhost:5174
+```
+
 ---
 
 # 🔐 Environment Variables
 
-| Variable                | Description                          |
-| ----------------------- | ------------------------------------ |
-| `PORT`                  | Backend server port                  |
-| `MONGODB_URI`           | MongoDB connection string            |
-| `JWT_SECRET`            | Secret key for JWT authentication    |
-| `ADMIN_EMAIL`           | Admin login email                    |
-| `ADMIN_PASSWORD`        | Admin login password                 |
-| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name                |
-| `CLOUDINARY_API_KEY`    | Cloudinary API key                   |
-| `CLOUDINARY_API_SECRET` | Cloudinary API secret                |
-| `FRONTEND_URL`          | User frontend URL                    |
-| `ADMIN_URL`             | Admin panel URL                      |
-| `VITE_BACKEND_URL`      | Backend API URL used by the frontend |
+| Variable                | Description                            |
+| ----------------------- | -------------------------------------- |
+| `PORT`                  | Backend server port                    |
+| `MONGODB_URI`           | MongoDB connection string              |
+| `JWT_SECRET`            | Secret key used for JWT authentication |
+| `ADMIN_EMAIL`           | Admin login email                      |
+| `ADMIN_PASSWORD`        | Admin login password                   |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name                  |
+| `CLOUDINARY_API_KEY`    | Cloudinary API key                     |
+| `CLOUDINARY_API_SECRET` | Cloudinary API secret                  |
+| `FRONTEND_URL`          | User frontend URL                      |
+| `ADMIN_URL`             | Admin panel URL                        |
+| `VITE_BACKEND_URL`      | Backend API URL used by the frontend   |
+
+> ⚠️ Never commit `.env` files or expose secret credentials in the repository.
+
+---
 
 # 🔐 Authentication Flow
+
+BookMyTurf uses **Passport.js Local Strategy**, bcrypt, and JWT for authentication.
 
 ```text
 User
   ↓
-Register with Name, Email, Phone & Password
+Register
+  ↓
+Name + Email + Phone + Password
   ↓
 Password Hashed using bcrypt
   ↓
 User Stored in MongoDB
   ↓
-Login with Email & Password
+Login with Email + Password
   ↓
-Passport Local Strategy Verifies Credentials
+Passport Local Strategy
+  ↓
+Credentials Verified
   ↓
 JWT Token Generated
   ↓
-User Logged In
+Protected Routes Accessible
 ```
+
+Protected API requests use:
+
+```text
+Authorization: Bearer <JWT_TOKEN>
+```
+
+---
 
 # 📅 Booking Flow
 
 ```text
 User
+  ↓
+Browse Venues
   ↓
 Select Turf
   ↓
@@ -270,22 +343,30 @@ Select Time Slot
   ↓
 Confirm Booking
   ↓
-Backend Validates Availability
+Backend Validates Venue & Slot
+  ↓
+Calculate Total Price
   ↓
 Booking Stored in MongoDB
   ↓
-Socket.IO Sends New Booking Event
+Socket.IO Emits "newBooking"
   ↓
 Admin Dashboard Receives Notification
-  ↓
-Booking Appears in Admin Dashboard
 ```
+
+The backend prevents duplicate active bookings for the same:
+
+```text
+Venue + Date + Time Slot
+```
+
+---
 
 # 🔔 Real-Time Notifications
 
-The Admin Dashboard uses **Socket.IO** to receive new booking events in real time.
+The Admin Dashboard uses **Socket.IO** for real-time new-booking notifications.
 
-When a user makes a booking:
+When a user creates a booking:
 
 ```text
 User Creates Booking
@@ -298,22 +379,81 @@ Admin Dashboard Receives Event
         ↓
 Notification Toast Appears
         ↓
-Booking List Updates Automatically
+Booking List Refreshes
 ```
+
+This allows administrators to see newly created bookings without manually refreshing the page.
+
+---
+
+# 🖼️ Venue Image Management
+
+Venue images are uploaded through the admin panel.
+
+```text
+Admin
+  ↓
+Select Venue Images
+  ↓
+Multer Handles Upload
+  ↓
+Cloudinary Upload
+  ↓
+Cloudinary URL Stored in MongoDB
+  ↓
+Frontend Displays Venue Images
+```
+
+---
 
 # 🔒 Security Features
 
-* Secure email/password authentication
-* Password hashing using bcrypt
-* Passport.js Local Strategy
-* JWT-based authorization
-* Protected user routes
-* Protected admin routes
-* Admin authentication
-* Bearer token authorization
-* Environment variables for sensitive credentials
-* Duplicate time-slot prevention
-* MongoDB validation and persistent data management
+* 🔐 Email/password authentication
+* 🔑 bcrypt password hashing
+* 🛂 Passport.js Local Strategy
+* 🎫 JWT-based authorization
+* 🛡️ Protected user routes
+* 🛡️ Protected admin routes
+* 🔑 Bearer token authentication
+* 🔒 Environment variables for sensitive credentials
+* 🚫 Duplicate booking prevention
+* ✅ Server-side booking validation
+* 🗄️ Persistent MongoDB data storage
+
+---
+
+# 📡 API Overview
+
+## Authentication
+
+```text
+POST /auth/signup
+POST /auth/login
+POST /auth/admin
+```
+
+## Venues
+
+```text
+GET  /venue/list
+POST /venue/single
+POST /venue/add
+POST /venue/remove
+```
+
+## Bookings
+
+```text
+POST /booking/create
+GET  /booking/my
+PUT  /booking/cancel/:id
+GET  /booking/all
+PUT  /booking/status/:id
+```
+
+Admin-only routes are protected using JWT-based admin authentication.
+
+---
 
 # 🎯 Future Improvements
 
@@ -321,23 +461,29 @@ Booking List Updates Automatically
 * 🤖 AI Chatbot for User Support
 * ⭐ Venue Reviews and Ratings
 * 📍 Google Maps Integration
-* 📱 Improved Mobile Experience
+* 📱 Enhanced Mobile Experience
 * 📊 Advanced Admin Analytics
 * 🔔 Push Notifications
 * 🎫 Discount and Coupon System
 * 🏆 Tournament Management
 * 📧 Booking Email Notifications
 
+---
+
 # 👨‍💻 Author
 
 **Chirag Jaiswal**
 
+**MERN Stack Developer | Software Developer**
+
 * GitHub: https://github.com/chirag-jaiswal-git
 * LinkedIn: https://www.linkedin.com/in/chirag-jaiswal18/
 
+---
+
 # ⭐ Support
 
-If you found this project useful, please consider giving the repository a **star ⭐**.
+If you found **BookMyTurf** useful, consider giving the repository a **star ⭐**.
 
 ---
 
@@ -352,5 +498,5 @@ This project is developed for educational and learning purposes.
 </p>
 
 <p align="center">
- ⚽ <strong>BookMyTurf</strong> — Book Your Game. Play Without Limits.
+  ⚽ <strong>BookMyTurf</strong> — Book Your Game. Play Without Limits.
 </p>
