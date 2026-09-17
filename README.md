@@ -1,12 +1,12 @@
 # ⚽ BookMyTurf — Turf Booking Platform
 
-A full-stack **MERN-based sports venue booking platform** that enables users to discover turfs, book available time slots, authenticate securely using Email OTP, and manage their bookings. The project also includes a dedicated **Admin Dashboard** for managing venues, bookings, booking statuses, refunds, and real-time booking notifications.
+A full-stack **MERN-based sports venue booking platform** that enables users to discover sports turfs, book available time slots, and manage their bookings with secure **email/password authentication**. The project also includes a dedicated **Admin Dashboard** for managing venues, bookings, booking statuses, and real-time booking notifications.
 
 ## 🚀 Live Features
 
 ### 👤 User Features
 
-* 🔐 Secure Email OTP Authentication
+* 🔐 Secure Email/Password Authentication
 * 📝 User Registration and Login
 * 🏟️ Browse Available Sports Turfs
 * 🔍 Search and Select Sports Venues
@@ -15,20 +15,16 @@ A full-stack **MERN-based sports venue booking platform** that enables users to 
 * 🎟️ Book Sports Venues
 * 📋 View Personal Bookings
 * ❌ Cancel Bookings
-* 📧 Booking-related Email Notifications
 * 🔒 Protected Routes using JWT Authentication
 
 ### 🛠️ Admin Features
 
 * 📊 Dedicated Admin Dashboard
 * ➕ Add New Venues
-* 📝 Update Venue Information
 * 🗑️ Remove Venues
 * 📋 View All Bookings
 * 🔄 Update Booking Status
-* 💰 Manage Refund Status
 * 🔔 Real-Time New Booking Notifications
-* 🔊 Notification Sound for New Bookings
 * 📡 Real-Time Communication using Socket.IO
 
 ## 🖼️ Screenshots
@@ -37,7 +33,7 @@ A full-stack **MERN-based sports venue booking platform** that enables users to 
 
 ![Home Page](./screenshots/home.png)
 
-### 🔐 OTP Authentication
+### 🔐 Authentication
 
 ![Authentication](./screenshots/auth.png)
 
@@ -53,7 +49,6 @@ A full-stack **MERN-based sports venue booking platform** that enables users to 
 
 ![Admin Dashboard](./screenshots/admin-dashboard.png)
 
-
 # 🧰 Tech Stack
 
 ## Frontend
@@ -64,7 +59,7 @@ A full-stack **MERN-based sports venue booking platform** that enables users to 
 * React Router DOM
 * Axios
 * React Toastify
-* React Icons
+* Lucide React
 
 ## Backend
 
@@ -73,9 +68,12 @@ A full-stack **MERN-based sports venue booking platform** that enables users to 
 * MongoDB
 * Mongoose
 * JSON Web Token (JWT)
+* Passport.js
+* Passport Local Strategy
 * bcrypt
-* Nodemailer
 * Socket.IO
+* Cloudinary
+* Multer
 
 ## Admin Panel
 
@@ -109,7 +107,6 @@ BookMyTurf/
 │   ├── middleware/
 │   ├── models/
 │   ├── routes/
-│   ├── utils/
 │   ├── socket.js
 │   ├── index.js
 │   └── package.json
@@ -162,8 +159,12 @@ JWT_SECRET=your_jwt_secret
 ADMIN_EMAIL=your_admin_email
 ADMIN_PASSWORD=your_admin_password
 
-EMAIL_USER=your_email
-EMAIL_PASS=your_email_app_password
+CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+
+FRONTEND_URL=http://localhost:5173
+ADMIN_URL=http://localhost:5174
 ```
 
 Start the backend server:
@@ -222,33 +223,34 @@ npm run dev
 
 # 🔐 Environment Variables
 
-| Variable           | Description                        |
-| ------------------ | ---------------------------------- |
-| `PORT`             | Backend server port                |
-| `MONGODB_URI`      | MongoDB connection string          |
-| `JWT_SECRET`       | Secret key for JWT authentication  |
-| `ADMIN_EMAIL`      | Admin login email                  |
-| `ADMIN_PASSWORD`   | Admin login password               |
-| `EMAIL_USER`       | Email address used for sending OTP |
-| `EMAIL_PASS`       | Email app password                 |
-| `VITE_BACKEND_URL` | Backend API URL for frontend       |
+| Variable                | Description                          |
+| ----------------------- | ------------------------------------ |
+| `PORT`                  | Backend server port                  |
+| `MONGODB_URI`           | MongoDB connection string            |
+| `JWT_SECRET`            | Secret key for JWT authentication    |
+| `ADMIN_EMAIL`           | Admin login email                    |
+| `ADMIN_PASSWORD`        | Admin login password                 |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name                |
+| `CLOUDINARY_API_KEY`    | Cloudinary API key                   |
+| `CLOUDINARY_API_SECRET` | Cloudinary API secret                |
+| `FRONTEND_URL`          | User frontend URL                    |
+| `ADMIN_URL`             | Admin panel URL                      |
+| `VITE_BACKEND_URL`      | Backend API URL used by the frontend |
 
-# 🔄 Authentication Flow
+# 🔐 Authentication Flow
 
 ```text
 User
   ↓
-Enter Email
+Register with Name, Email, Phone & Password
   ↓
-Request OTP
+Password Hashed using bcrypt
   ↓
-Backend Generates OTP
+User Stored in MongoDB
   ↓
-OTP Sent via Email
+Login with Email & Password
   ↓
-User Enters OTP
-  ↓
-OTP Verified
+Passport Local Strategy Verifies Credentials
   ↓
 JWT Token Generated
   ↓
@@ -268,9 +270,13 @@ Select Time Slot
   ↓
 Confirm Booking
   ↓
+Backend Validates Availability
+  ↓
 Booking Stored in MongoDB
   ↓
-Admin Receives Real-Time Notification
+Socket.IO Sends New Booking Event
+  ↓
+Admin Dashboard Receives Notification
   ↓
 Booking Appears in Admin Dashboard
 ```
@@ -292,21 +298,22 @@ Admin Dashboard Receives Event
         ↓
 Notification Toast Appears
         ↓
-Notification Sound Plays
-        ↓
 Booking List Updates Automatically
 ```
 
 # 🔒 Security Features
 
-* Password-free Email OTP authentication
-* OTP expiration support
-* Hashed OTP using bcrypt
+* Secure email/password authentication
+* Password hashing using bcrypt
+* Passport.js Local Strategy
 * JWT-based authorization
 * Protected user routes
+* Protected admin routes
 * Admin authentication
-* Secure API communication
+* Bearer token authorization
 * Environment variables for sensitive credentials
+* Duplicate time-slot prevention
+* MongoDB validation and persistent data management
 
 # 🎯 Future Improvements
 
@@ -319,7 +326,7 @@ Booking List Updates Automatically
 * 🔔 Push Notifications
 * 🎫 Discount and Coupon System
 * 🏆 Tournament Management
-* 📧 Enhanced Booking Email Templates
+* 📧 Booking Email Notifications
 
 # 👨‍💻 Author
 
