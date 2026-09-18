@@ -11,7 +11,7 @@ import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const OTPAuth = ({ mode = "login" }) => {
+const Auth = ({ mode = "login" }) => {
   const backendURL =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
