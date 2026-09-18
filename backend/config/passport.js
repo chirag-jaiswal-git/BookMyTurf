@@ -1,48 +1,45 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import bcrypt from "bcrypt";
 
 import userModel from "../models/userModel.js";
+
+// ===============================
+// LOCAL STRATEGY
+// ===============================
 
 passport.use(
   new LocalStrategy(
     {
       usernameField: "email",
-      passwordField: "password",
     },
-
-    async (email, password, done) => {
-      try {
-        const user = await userModel.findOne({
-          email: email.toLowerCase().trim(),
-        });
-
-        if (!user) {
-          return done(null, false, {
-            message: "Invalid email or password",
-          });
-        }
-
-        if (!user.password) {
-          return done(null, false, {
-            message: "Please create a new account",
-          });
-        }
-
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-
-        if (!isPasswordValid) {
-          return done(null, false, {
-            message: "Invalid email or password",
-          });
-        }
-
-        return done(null, user);
-      } catch (error) {
-        return done(error);
-      }
-    },
+    userModel.authenticate(),
   ),
 );
+
+// ===============================
+// SAVE USER IN SESSION
+// ===============================
+
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+
+// ===============================
+// GET USER FROM SESSION
+// ===============================
+
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await userModel.findById(id);
+
+    if (!user) {
+      return done(null, false);
+    }
+
+    done(null, user);
+  } catch (error) {
+    done(error, null);
+  }
+});
 
 export default passport;

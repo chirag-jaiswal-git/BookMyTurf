@@ -2,14 +2,18 @@ import express from "express";
 import cors from "cors";
 import "dotenv/config.js";
 import http from "http";
+import session from "express-session";
+import passport from "./config/passport.js";
 import { Server } from "socket.io";
 
+// Database & Cloudinary
 import connectDB from "./config/mongodb.js";
 import connectCloudinary from "./config/cloudinary.js";
+
+// Socket
 import { initSocket } from "./socket.js";
 
-import passport from "./config/passport.js";
-
+// Routes
 import AuthRouter from "./routes/AuthRouter.js";
 import venueRouter from "./routes/venueRouter.js";
 import bookingRouter from "./routes/bookingRoutes.js";
@@ -61,12 +65,36 @@ app.use(
 // ===============================
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// ===============================
+// SESSION
+// ===============================
+
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+
+    cookie: {
+      httpOnly: true,
+
+      secure: process.env.NODE_ENV === "production",
+
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    },
+  }),
+);
 
 // ===============================
 // PASSPORT
 // ===============================
 
 app.use(passport.initialize());
+app.use(passport.session());
 
 // ===============================
 // API ROUTES

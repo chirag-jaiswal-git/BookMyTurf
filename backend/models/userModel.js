@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import passportLocalMongoose from "passport-local-mongoose";
 
 const userSchema = new mongoose.Schema(
   {
@@ -23,17 +24,16 @@ const userSchema = new mongoose.Schema(
       required: true,
       match: /^\d{10}$/,
     },
-
-    password: {
-      type: String,
-      required: true,
-      minlength: 6,
-    },
   },
   {
     timestamps: true,
   },
 );
+
+// Passport Local Mongoose
+userSchema.plugin(passportLocalMongoose.default || passportLocalMongoose, {
+  usernameField: "email",
+});
 
 const userModel = mongoose.models.User || mongoose.model("User", userSchema);
 

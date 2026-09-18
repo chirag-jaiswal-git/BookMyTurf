@@ -46,9 +46,12 @@ export const createBooking = async (req, res) => {
 
     const newBooking = await bookingModel.create({
       venueId,
-      userId: req.user.user_id,
+
+      // Passport session user
+      userId: req.user._id,
       name: req.user.name,
       email: req.user.email,
+
       bookingDate,
       timeSlot,
       totalPrice,
@@ -105,7 +108,8 @@ export const getMyBookings = async (req, res) => {
   try {
     const bookings = await bookingModel
       .find({
-        userId: req.user.user_id,
+        // Passport session user
+        userId: req.user._id,
       })
       .populate("venueId")
       .sort({ createdAt: -1 });
@@ -223,7 +227,8 @@ export const cancelBooking = async (req, res) => {
       });
     }
 
-    if (booking.userId.toString() !== req.user.user_id) {
+    // Passport session user
+    if (booking.userId.toString() !== req.user._id.toString()) {
       return res.status(403).json({
         success: false,
         message: "Not authorized",

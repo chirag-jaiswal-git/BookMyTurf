@@ -1,6 +1,4 @@
 import userModel from "../models/userModel.js";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import passport from "../config/passport.js";
 
 // ===============================
@@ -43,7 +41,9 @@ const signup = async (req, res) => {
       });
     }
 
-    const existingUser = await userModel.findOne({ email });
+    const existingUser = await userModel.findOne({
+      email,
+    });
 
     if (existingUser) {
       return res.status(409).json({
@@ -52,31 +52,18 @@ const signup = async (req, res) => {
       });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const user = await userModel.create({
+    // Passport Local Mongoose handles password hashing
+    const user = new userModel({
       name,
       email,
       phone,
-      password: hashedPassword,
     });
 
-    const token = jwt.sign(
-      {
-        user_id: user._id.toString(),
-        name: user.name,
-        email: user.email,
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "7d",
-      },
-    );
+    await userModel.register(user, password);
 
     res.status(201).json({
       success: true,
       message: "Account created successfully",
-      token,
       user: {
         id: user._id,
         name: user.name,
@@ -116,28 +103,27 @@ const login = (req, res, next) => {
       });
     }
 
-    const token = jwt.sign(
-      {
-        user_id: user._id.toString(),
-        name: user.name,
-        email: user.email,
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "7d",
-      },
-    );
+    req.logIn(user, (loginError) => {
+      if (loginError) {
+        console.error("Session Login Error:", loginError);
 
-    res.status(200).json({
-      success: true,
-      message: "Login successful",
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-      },
+        return res.status(500).json({
+          success: false,
+          message: "Login failed",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Login successful",
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          isAdmin: user.isAdmin,
+        },
+      });
     });
   })(req, res, next);
 };
@@ -146,52 +132,34 @@ const login = (req, res, next) => {
 // ADMIN LOGIN
 // ===============================
 
-const adminLogin = async (req, res) => {
-  try {
-    const email = req.body.email?.trim().toLowerCase();
-    const password = req.body.password;
+const adminLogin = (req, res, next) => {
+  const email = req.body.email?.trim().toLowerCase();
+  const password = req.body.password;
 
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "Email and password are required",
-      });
-    }
-
-    if (
-      email !== process.env.ADMIN_EMAIL?.toLowerCase() ||
-      password !== process.env.ADMIN_PASSWORD
-    ) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid admin credentials",
-      });
-    }
-
-    const token = jwt.sign(
-      {
-        email,
-        isAdmin: true,
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "12h",
-      },
-    );
-
-    res.status(200).json({
-      success: true,
-      message: "Admin login successful",
-      token,
-    });
-  } catch (error) {
-    console.error("Admin Login Error:", error);
-
-    res.status(500).json({
+  if (!email || !password) {
+    return res.status(400).json({
       success: false,
-      message: "Server error",
+      message: "Email and password are required",
     });
   }
+
+  if (
+    email !== process.env.ADMIN_EMAIL?.toLowerCase() ||
+    password !== process.env.ADMIN_PASSWORD
+  ) {
+    return res.status(401).json({
+      success: false,
+      message: "Invalid admin credentials",
+    });
+  }
+
+  req.session.isAdmin = true;
+  req.session.adminEmail = email;
+
+  return res.status(200).json({
+    success: true,
+    message: "Admin login successful",
+  });
 };
 
 export { signup, login, adminLogin };
