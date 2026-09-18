@@ -1,11 +1,6 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-
 import userModel from "../models/userModel.js";
-
-// ===============================
-// LOCAL STRATEGY
-// ===============================
 
 passport.use(
   new LocalStrategy(
@@ -16,28 +11,25 @@ passport.use(
   ),
 );
 
-// ===============================
-// SAVE USER IN SESSION
-// ===============================
-
 passport.serializeUser((user, done) => {
+  console.log("Serializing user:", user._id);
   done(null, user.id);
 });
 
-// ===============================
-// GET USER FROM SESSION
-// ===============================
-
 passport.deserializeUser(async (id, done) => {
   try {
+    console.log("Deserializing user ID:", id);
+
     const user = await userModel.findById(id);
 
     if (!user) {
+      console.log("User not found during deserialization");
       return done(null, false);
     }
 
     done(null, user);
   } catch (error) {
+    console.error("Deserialization error:", error);
     done(error, null);
   }
 });

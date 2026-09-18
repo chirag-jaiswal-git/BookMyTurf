@@ -95,17 +95,11 @@ router.post("/signup", async (req, res) => {
 router.post("/login", (req, res, next) => {
   passport.authenticate("local", (error, user, info) => {
     if (error) {
-      console.error("Login Error:", error);
-
-      return res.status(500).json({
-        success: false,
-        message: "Server error",
-      });
+      console.error("Passport authentication error:", error);
+      return next(error);
     }
 
     if (!user) {
-      console.log("Login Failed:", info);
-
       return res.status(401).json({
         success: false,
         message: info?.message || "Invalid email or password",
@@ -114,23 +108,35 @@ router.post("/login", (req, res, next) => {
 
     req.logIn(user, (error) => {
       if (error) {
-        console.error("Session Login Error:", error);
-
-        return res.status(500).json({
-          success: false,
-          message: "Session login failed",
-        });
+        console.error("Session login error:", error);
+        return next(error);
       }
 
-      return res.status(200).json({
-        success: true,
-        message: "User logged in successfully",
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          phone: user.phone,
-        },
+      console.log("Logged-in user:", user._id);
+      console.log("Login session:", req.session);
+
+      req.session.save((error) => {
+        if (error) {
+          console.error("Session save error:", error);
+
+          return res.status(500).json({
+            success: false,
+            message: "Failed to save login session",
+          });
+        }
+
+        console.log("Session saved successfully:", req.session);
+
+        return res.status(200).json({
+          success: true,
+          message: "Login successful",
+          user: {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+          },
+        });
       });
     });
   })(req, res, next);
