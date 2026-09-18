@@ -19,11 +19,15 @@ export default function MyBookings() {
   const [selectedBookingId, setSelectedBookingId] = useState(null);
 
   const backendURL =
-    import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+    import.meta.env.VITE_BACKEND_URL ||
+    "http://localhost:5000";
 
   const navigate = useNavigate();
 
+  // ===============================
   // FORMAT TIME SLOT
+  // ===============================
+
   const formatTimeSlot = (slot) => {
     if (!slot) return "";
 
@@ -35,7 +39,11 @@ export default function MyBookings() {
       const [hour, minute] = time.split(":");
 
       const date = new Date();
-      date.setHours(Number(hour), Number(minute));
+
+      date.setHours(
+        Number(hour),
+        Number(minute),
+      );
 
       return date.toLocaleTimeString("en-IN", {
         hour: "numeric",
@@ -47,7 +55,10 @@ export default function MyBookings() {
     return `${formatTime(start)} - ${formatTime(end)}`;
   };
 
+  // ===============================
   // VIEW TURF DETAILS
+  // ===============================
+
   const handleViewDetails = (venue) => {
     if (!venue?._id) return;
 
@@ -56,39 +67,44 @@ export default function MyBookings() {
     });
   };
 
+  // ===============================
   // FETCH MY BOOKINGS
+  // ===============================
+
   useEffect(() => {
     const fetchBookings = async () => {
-      const token = localStorage.getItem("token");
-
-      if (!token) {
-        navigate("/login");
-        return;
-      }
-
       try {
-        const res = await axios.get(`${backendURL}/booking/my`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
+        const res = await axios.get(
+          `${backendURL}/booking/my`,
+          {
+            withCredentials: true,
           },
-        });
+        );
 
         setBookings(res.data.bookings || []);
       } catch (error) {
-        console.error("Fetch bookings error:", error);
+        console.error(
+          "Fetch bookings error:",
+          error,
+        );
 
         if (error.response?.status === 401) {
-          localStorage.removeItem("token");
-          localStorage.removeItem("loggedInUser");
+          localStorage.removeItem(
+            "loggedInUser",
+          );
 
-          window.dispatchEvent(new Event("loggedInUserChanged"));
+          window.dispatchEvent(
+            new Event("loggedInUserChanged"),
+          );
 
           navigate("/login");
+
           return;
         }
 
         toast.error(
-          error.response?.data?.message || "Failed to load your bookings",
+          error.response?.data?.message ||
+            "Failed to load your bookings",
         );
       }
     };
@@ -96,27 +112,24 @@ export default function MyBookings() {
     fetchBookings();
   }, [backendURL, navigate]);
 
+  // ===============================
   // CANCEL BOOKING
+  // ===============================
+
   const handleCancel = async () => {
     try {
-      const token = localStorage.getItem("token");
-
-      if (!token) {
-        navigate("/login");
-        return;
-      }
-
       const res = await axios.put(
         `${backendURL}/booking/cancel/${selectedBookingId}`,
         {},
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          withCredentials: true,
         },
       );
 
-      toast.success(res.data.message || "Booking cancelled successfully");
+      toast.success(
+        res.data.message ||
+          "Booking cancelled successfully",
+      );
 
       setBookings((prev) =>
         prev.map((booking) =>
@@ -132,25 +145,36 @@ export default function MyBookings() {
       setIsModalOpen(false);
       setSelectedBookingId(null);
     } catch (error) {
-      console.error("Cancel booking error:", error);
+      console.error(
+        "Cancel booking error:",
+        error,
+      );
 
       if (error.response?.status === 401) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("loggedInUser");
+        localStorage.removeItem(
+          "loggedInUser",
+        );
 
-        window.dispatchEvent(new Event("loggedInUserChanged"));
+        window.dispatchEvent(
+          new Event("loggedInUserChanged"),
+        );
 
         navigate("/login");
+
         return;
       }
 
       toast.error(
-        error.response?.data?.message || "Failed to cancel booking",
+        error.response?.data?.message ||
+          "Failed to cancel booking",
       );
     }
   };
 
+  // ===============================
   // ANIMATION VARIANTS
+  // ===============================
+
   const containerVariants = {
     hidden: {
       opacity: 0,
@@ -277,7 +301,11 @@ export default function MyBookings() {
                       </span>
 
                       <span className="text-xl font-black text-center">
-                        {new Date(b.bookingDate).toLocaleDateString("en-IN")}
+                        {new Date(
+                          b.bookingDate,
+                        ).toLocaleDateString(
+                          "en-IN",
+                        )}
                       </span>
                     </div>
 
@@ -287,17 +315,24 @@ export default function MyBookings() {
                       {/* Venue + Status */}
                       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-3">
                         <h2
-                          onClick={() => handleViewDetails(b.venueId)}
+                          onClick={() =>
+                            handleViewDetails(
+                              b.venueId,
+                            )
+                          }
                           className="text-xl font-black text-gray-800 group-hover:text-emerald-600 transition-colors uppercase cursor-pointer"
                         >
-                          {b.venueId?.name || "Turf"}
+                          {b.venueId?.name ||
+                            "Turf"}
                         </h2>
 
                         <span
                           className={`text-xs font-extrabold px-3 py-1 rounded-full border ${
-                            b.bookingStatus === "Cancelled"
+                            b.bookingStatus ===
+                            "Cancelled"
                               ? "bg-red-100 text-red-600 border-red-200"
-                              : b.bookingStatus === "Completed"
+                              : b.bookingStatus ===
+                                  "Completed"
                                 ? "bg-blue-100 text-blue-600 border-blue-200"
                                 : "bg-green-100 text-green-600 border-green-200"
                           }`}
@@ -313,7 +348,8 @@ export default function MyBookings() {
                           className="mr-1 text-emerald-500"
                         />
 
-                        {b.venueId?.location || "Location not available"}
+                        {b.venueId?.location ||
+                          "Location not available"}
                       </div>
 
                       {/* Time + Price */}
@@ -327,7 +363,9 @@ export default function MyBookings() {
                           />
 
                           <span className="text-sm">
-                            {formatTimeSlot(b.timeSlot)}
+                            {formatTimeSlot(
+                              b.timeSlot,
+                            )}
                           </span>
                         </div>
 
@@ -347,7 +385,10 @@ export default function MyBookings() {
 
                     {/* ACTIONS */}
                     <div className="p-6 flex items-center justify-center border-t md:border-t-0 md:border-l border-gray-100 bg-gray-50/50">
-                      {["Pending", "Confirmed"].includes(
+                      {[
+                        "Pending",
+                        "Confirmed",
+                      ].includes(
                         b.bookingStatus,
                       ) && (
                         <motion.button
@@ -358,7 +399,10 @@ export default function MyBookings() {
                             scale: 0.95,
                           }}
                           onClick={() => {
-                            setSelectedBookingId(b._id);
+                            setSelectedBookingId(
+                              b._id,
+                            );
+
                             setIsModalOpen(true);
                           }}
                           className="w-full md:w-auto px-5 py-2.5 bg-white border border-red-200 text-red-600 font-bold rounded-xl hover:bg-red-50 hover:border-red-300 transition-all flex items-center justify-center gap-2 shadow-sm"
@@ -395,3 +439,4 @@ export default function MyBookings() {
     </div>
   );
 }
+

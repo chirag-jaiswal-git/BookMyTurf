@@ -5,24 +5,17 @@ import { toast } from "react-toastify";
 import { FaTrash, FaPlus, FaSadTear } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
-const List = ({ token }) => {
+const List = () => {
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // FETCH VENUES
   const fetchList = async () => {
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-
     setLoading(true);
 
     try {
       const response = await axios.get(`${backendURL}/venue/list`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        withCredentials: true,
       });
 
       if (response.data.success) {
@@ -33,7 +26,9 @@ const List = ({ token }) => {
     } catch (error) {
       console.error("Error fetching venues:", error);
 
-      toast.error(error.response?.data?.message || "Error fetching venues");
+      toast.error(
+        error.response?.data?.message || "Error fetching venues",
+      );
     } finally {
       setLoading(false);
     }
@@ -56,9 +51,7 @@ const List = ({ token }) => {
           id: venueId,
         },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          withCredentials: true,
         },
       );
 
@@ -66,18 +59,22 @@ const List = ({ token }) => {
         toast.success("Venue removed successfully!");
         fetchList();
       } else {
-        toast.error(response.data.message || "Failed to remove the venue");
+        toast.error(
+          response.data.message || "Failed to remove the venue",
+        );
       }
     } catch (error) {
       console.error("Error removing venue:", error);
 
-      toast.error(error.response?.data?.message || "Error removing venue");
+      toast.error(
+        error.response?.data?.message || "Error removing venue",
+      );
     }
   };
 
   useEffect(() => {
     fetchList();
-  }, [token]);
+  }, []);
 
   // LOADING
   if (loading) {
@@ -94,9 +91,13 @@ const List = ({ token }) => {
         {/* HEADER */}
         <div className="flex justify-between items-center mb-6 border-b pb-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">All Venues</h1>
+            <h1 className="text-2xl font-bold text-gray-800">
+              All Venues
+            </h1>
 
-            <p className="text-sm text-gray-500">{list.length} venues found</p>
+            <p className="text-sm text-gray-500">
+              {list.length} venues found
+            </p>
           </div>
 
           <Link
@@ -166,9 +167,13 @@ const List = ({ token }) => {
 
                   {/* VENUE */}
                   <div>
-                    <p className="font-semibold text-gray-800">{item.name}</p>
+                    <p className="font-semibold text-gray-800">
+                      {item.name}
+                    </p>
 
-                    <p className="text-xs text-gray-500">{item.location}</p>
+                    <p className="text-xs text-gray-500">
+                      {item.location}
+                    </p>
                   </div>
 
                   {/* SPORTS */}

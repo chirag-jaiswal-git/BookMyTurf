@@ -48,9 +48,10 @@ const OTPAuth = ({ mode = "login" }) => {
     setLoading(true);
 
     try {
-      // -------------------------
+      // =========================
       // SIGNUP
-      // -------------------------
+      // =========================
+
       if (mode === "register") {
         const name = formData.name.trim();
         const email = formData.email.trim().toLowerCase();
@@ -82,33 +83,34 @@ const OTPAuth = ({ mode = "login" }) => {
           return;
         }
 
-        const res = await axios.post(`${backendURL}/auth/signup`, {
-          name,
-          email,
-          phone,
-          password,
-          confirmPassword,
-        });
+        const res = await axios.post(
+          `${backendURL}/auth/signup`,
+          {
+            name,
+            email,
+            phone,
+            password,
+            confirmPassword,
+          },
+          {
+            withCredentials: true,
+          },
+        );
 
         if (res.data.success) {
-          localStorage.setItem("token", res.data.token);
-          localStorage.setItem("loggedInUser", res.data.user.name);
-
-          window.dispatchEvent(new Event("loggedInUserChanged"));
-
           toast.success("Registration successful 🎉");
 
           setTimeout(() => {
-             navigate("/login");
+            navigate("/login");
           }, 800);
         }
 
         return;
       }
 
-      // -------------------------
+      // =========================
       // LOGIN
-      // -------------------------
+      // =========================
 
       const email = formData.email.trim().toLowerCase();
       const password = formData.password;
@@ -119,13 +121,18 @@ const OTPAuth = ({ mode = "login" }) => {
         return;
       }
 
-      const res = await axios.post(`${backendURL}/auth/login`, {
-        email,
-        password,
-      });
+      const res = await axios.post(
+        `${backendURL}/auth/login`,
+        {
+          email,
+          password,
+        },
+        {
+          withCredentials: true,
+        },
+      );
 
       if (res.data.success) {
-        localStorage.setItem("token", res.data.token);
         localStorage.setItem("loggedInUser", res.data.user.name);
 
         window.dispatchEvent(new Event("loggedInUserChanged"));
@@ -272,7 +279,10 @@ const OTPAuth = ({ mode = "login" }) => {
   );
 };
 
+// =========================
 // REUSABLE INPUT
+// =========================
+
 const Input = ({ label, icon, ...props }) => (
   <div>
     <label className="text-gray-500 text-xs font-bold ml-1 mb-1 block uppercase tracking-wide">
@@ -293,4 +303,4 @@ const Input = ({ label, icon, ...props }) => (
   </div>
 );
 
-export default OTPAuth;
+export default Auth;

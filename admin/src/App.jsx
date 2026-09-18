@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
+import axios from "axios";
 import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css"; // Import styles for toastify
+import "react-toastify/dist/ReactToastify.css";
 
 // Component Imports
 import Navbar from "./components/Navbar";
@@ -16,36 +17,73 @@ import Bookings from "./pages/Bookings";
 export const backendURL = import.meta.env.VITE_BACKEND_URL;
 
 const App = () => {
-  // --- Token Management ---
-  const [token, setToken] = useState(localStorage.getItem("adminToken") || "");
+  // Admin session state
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // --- Sidebar Mobile State ---
+  // Sidebar mobile state
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleSidebar = () => setIsOpen((prev) => !prev);
+
   const closeSidebar = () => setIsOpen(false);
 
+  // ===============================
+  // CHECK ADMIN SESSION
+  // ===============================
+
   useEffect(() => {
-    if (token) {
-      localStorage.setItem("adminToken", token);
-    } else {
-      localStorage.removeItem("adminToken");
-    }
-  }, [token]);
+    const checkAdmin = async () => {
+      try {
+        const response = await axios.get(`${backendURL}/auth/admin/`, {
+          withCredentials: true,
+        });
 
-  // --- Render Logic ---
+        if (response.data.success) {
+          setIsAdmin(true);
+        } else {
+          setIsAdmin(false);
+        }
+      } catch (error) {
+        setIsAdmin(false);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  if (!token) {
-    // If no token, render the centered Login page
+    checkAdmin();
+  }, []);
+
+  // ===============================
+  // LOADING
+  // ===============================
+
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-        <ToastContainer autoClose={800} theme="colored" position="top-center" />
-        <Login setToken={setToken} />
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <p className="text-gray-600 font-medium">Loading...</p>
       </div>
     );
   }
 
-  // If token exists, render the full admin dashboard layout
+  // ===============================
+  // LOGIN
+  // ===============================
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+        <ToastContainer autoClose={800} theme="colored" position="top-center" />
+
+        <Login setIsAdmin={setIsAdmin} />
+      </div>
+    );
+  }
+
+  // ===============================
+  // ADMIN DASHBOARD
+  // ===============================
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       <ToastContainer
@@ -56,27 +94,28 @@ const App = () => {
         pauseOnHover
       />
 
-      {/* Sidebar with state control props */}
+      {/* SIDEBAR */}
       <Sidebar
         isOpen={isOpen}
         toggleSidebar={toggleSidebar}
         closeSidebar={closeSidebar}
       />
 
-      {/* Navbar sitting at the top */}
-      <Navbar setToken={setToken} toggleSidebar={toggleSidebar} />
+      {/* NAVBAR */}
+      <Navbar setIsAdmin={setIsAdmin} toggleSidebar={toggleSidebar} />
 
-      {/* Main Content Area */}
+      {/* MAIN CONTENT */}
       <main className="flex-1 md:ml-64 pt-16">
         <Routes>
-          {/* Default route redirects to a primary page */}
-          <Route path="/" element={<Navigate to="/add" />} />
-          <Route path="/add" element={<Add token={token} />} />
-          <Route path="/list" element={<List token={token} />} />
-          <Route path="/bookings" element={<Bookings token={token} />} />
+          <Route path="/" element={<Navigate to="/add" replace />} />
 
-          {/* Catch-all redirect to fallback route */}
-          <Route path="*" element={<Navigate to="/add" />} />
+          <Route path="/add" element={<Add />} />
+
+          <Route path="/list" element={<List />} />
+
+          <Route path="/bookings" element={<Bookings />} />
+
+          <Route path="*" element={<Navigate to="/add" replace />} />
         </Routes>
       </main>
     </div>

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { FiLogOut, FiBell, FiX, FiMenu } from "react-icons/fi";
+import axios from "axios";
+import { backendURL } from "../App";
 import socket from "../socket";
 import { toast } from "react-toastify";
 
-const Navbar = ({ setToken, toggleSidebar }) => {
+const Navbar = ({ setIsAdmin, toggleSidebar }) => {
   const [title, setTitle] = useState("Dashboard");
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -46,26 +48,29 @@ const Navbar = ({ setToken, toggleSidebar }) => {
     const handleNewBooking = (booking) => {
       console.log("🔔 New booking received:", booking);
 
-      // Add booking to notification bell
       setNotifications((prev) => [booking, ...prev]);
 
-      // --- INSTAGRAM MOBILE NOTIFICATION STYLE TOAST ---
       toast(
         <div className="flex items-center gap-3">
           <div className="text-2xl bg-emerald-100 p-2 rounded-full border border-emerald-200">
             ⚽
           </div>
+
           <div className="flex-1">
             <div className="flex items-center justify-between">
               <h4 className="font-semibold text-xs text-slate-800 uppercase tracking-wider">
                 bookMyturf • now
               </h4>
             </div>
+
             <p className="text-xs text-slate-900 font-bold mt-0.5">
-              {booking.customerName} booked {booking.venueName || "a turf"}
+              {booking.customerName} booked{" "}
+              {booking.venueName || "a turf"}
             </p>
+
             <p className="text-[11px] text-slate-500 font-medium">
-              ⏰ {booking.timeSlot || "N/A"} | 💰 ₹{booking.totalPrice || "0"}
+              ⏰ {booking.timeSlot || "N/A"} | 💰 ₹
+              {booking.totalPrice || "0"}
             </p>
           </div>
         </div>,
@@ -104,12 +109,35 @@ const Navbar = ({ setToken, toggleSidebar }) => {
     setShowNotifications(false);
   };
 
+  // ===============================
+  // ADMIN LOGOUT
+  // ===============================
+  const handleLogout = async () => {
+    try {
+      await axios.post(
+        `${backendURL}/auth/admin/logout`,
+        {},
+        {
+          withCredentials: true,
+        },
+      );
+
+      setIsAdmin(false);
+      toast.success("Logged out successfully");
+    } catch (error) {
+      console.error("Admin Logout Error:", error);
+
+      toast.error(
+        error.response?.data?.message || "Logout failed",
+      );
+    }
+  };
+
   return (
     <nav className="fixed top-0 left-0 md:left-64 right-0 h-16 bg-white/80 backdrop-blur-md border-b border-gray-200 z-40">
       <div className="flex items-center justify-between h-full px-4 sm:px-6">
-        {/* ===============================
-            LEFT SIDE: MOBILE TOGGLE & TITLE
-        =============================== */}
+
+        {/* LEFT SIDE */}
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -125,44 +153,48 @@ const Navbar = ({ setToken, toggleSidebar }) => {
           </h1>
         </div>
 
-        {/* ===============================
-            RIGHT SIDE: ACTIONS & PROFILE
-        =============================== */}
+        {/* RIGHT SIDE */}
         <div className="flex items-center gap-3 sm:gap-4">
-          {/* ===============================
-              NOTIFICATION BELL
-          =============================== */}
+
+          {/* NOTIFICATION BELL */}
           <div className="relative">
             <button
               type="button"
-              onClick={() => setShowNotifications((prev) => !prev)}
+              onClick={() =>
+                setShowNotifications((prev) => !prev)
+              }
               className="relative flex items-center justify-center h-10 w-10 rounded-full bg-gray-100 text-gray-600 hover:bg-green-100 hover:text-green-700 transition-all duration-300"
               title="Notifications"
             >
               <FiBell className="h-5 w-5" />
 
-              {/* UNREAD COUNT */}
               {notifications.length > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold">
-                  {notifications.length > 99 ? "99+" : notifications.length}
+                  {notifications.length > 99
+                    ? "99+"
+                    : notifications.length}
                 </span>
               )}
             </button>
 
-            {/* ===============================
-                NOTIFICATION DROPDOWN
-            =============================== */}
+            {/* NOTIFICATION DROPDOWN */}
             {showNotifications && (
               <div className="absolute right-0 top-12 w-80 sm:w-96 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden">
+
                 {/* HEADER */}
                 <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
                   <div>
-                    <h3 className="font-bold text-gray-800">Notifications</h3>
+                    <h3 className="font-bold text-gray-800">
+                      Notifications
+                    </h3>
+
                     <p className="text-xs text-gray-500">
                       {notifications.length === 0
                         ? "No new notifications"
                         : `${notifications.length} new booking${
-                            notifications.length > 1 ? "s" : ""
+                            notifications.length > 1
+                              ? "s"
+                              : ""
                           }`}
                     </p>
                   </div>
@@ -181,13 +213,17 @@ const Navbar = ({ setToken, toggleSidebar }) => {
                 {notifications.length === 0 ? (
                   <div className="px-4 py-10 text-center">
                     <FiBell className="mx-auto h-8 w-8 text-gray-300 mb-2" />
-                    <p className="text-sm text-gray-500">No new bookings</p>
+                    <p className="text-sm text-gray-500">
+                      No new bookings
+                    </p>
                   </div>
                 ) : (
                   <div className="max-h-96 overflow-y-auto">
                     {notifications.map((notification, index) => (
                       <div
-                        key={notification.bookingId || index}
+                        key={
+                          notification.bookingId || index
+                        }
                         className="px-4 py-4 border-b border-gray-100 hover:bg-gray-50 transition"
                       >
                         <div className="flex items-start gap-3">
@@ -204,7 +240,9 @@ const Navbar = ({ setToken, toggleSidebar }) => {
                               <button
                                 onClick={() => {
                                   setNotifications((prev) =>
-                                    prev.filter((_, i) => i !== index),
+                                    prev.filter(
+                                      (_, i) => i !== index,
+                                    ),
                                   );
                                 }}
                                 className="text-gray-400 hover:text-red-500"
@@ -224,8 +262,14 @@ const Navbar = ({ setToken, toggleSidebar }) => {
                             </p>
 
                             <div className="mt-2 text-xs text-gray-500 space-y-1">
-                              <p>📅 {notification.bookingDate}</p>
-                              <p>🕐 {notification.timeSlot}</p>
+                              <p>
+                                📅 {notification.bookingDate}
+                              </p>
+
+                              <p>
+                                🕐 {notification.timeSlot}
+                              </p>
+
                               <p className="font-semibold text-green-600">
                                 ₹{notification.totalPrice}
                               </p>
@@ -240,28 +284,26 @@ const Navbar = ({ setToken, toggleSidebar }) => {
             )}
           </div>
 
-          {/* ===============================
-              ADMIN PROFILE
-          =============================== */}
+          {/* ADMIN PROFILE */}
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-green-800 flex items-center justify-center text-white font-bold">
               A
             </div>
 
             <div className="hidden sm:block">
-              <p className="font-semibold text-gray-700">Admin</p>
-              <p className="text-xs text-gray-500">Administrator</p>
+              <p className="font-semibold text-gray-700">
+                Admin
+              </p>
+
+              <p className="text-xs text-gray-500">
+                Administrator
+              </p>
             </div>
           </div>
 
-          {/* ===============================
-              LOGOUT
-          =============================== */}
+          {/* LOGOUT */}
           <button
-            onClick={() => {
-              localStorage.removeItem("adminToken");
-              setToken("");
-            }}
+            onClick={handleLogout}
             title="Logout"
             className="flex items-center justify-center h-10 w-10 bg-gray-200 text-gray-600 rounded-full hover:bg-red-500 hover:text-white transition-all duration-300"
           >

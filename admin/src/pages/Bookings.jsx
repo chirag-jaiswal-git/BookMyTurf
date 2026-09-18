@@ -5,41 +5,59 @@ import { toast } from "react-toastify";
 import { FaSpinner } from "react-icons/fa";
 import { io } from "socket.io-client";
 
-const Bookings = ({ token }) => {
+const Bookings = () => {
   const [bookings, setBookings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // ===============================
   // FETCH ALL BOOKINGS
-  const fetchAllBookings = async () => {
-    if (!token) {
-      setIsLoading(false);
-      return;
-    }
+  // ===============================
 
+  const fetchAllBookings = async () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.get(`${backendURL}/booking/all`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const response = await axios.get(
+        `${backendURL}/booking/all`,
+        {
+          withCredentials: true,
         },
-      });
+      );
 
       if (response.data.success) {
-        setBookings(response.data.bookings);
+        setBookings(
+          response.data.bookings || [],
+        );
       } else {
-        toast.error(response.data.message);
+        toast.error(
+          response.data.message ||
+            "Failed to fetch bookings",
+        );
       }
     } catch (error) {
-      console.log(error);
+      console.error(
+        "Fetch Bookings Error:",
+        error,
+      );
 
-      toast.error(error.response?.data?.message || "Error fetching bookings");
+      if (error.response?.status === 401) {
+        toast.error("Admin session expired");
+        return;
+      }
+
+      toast.error(
+        error.response?.data?.message ||
+          "Error fetching bookings",
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
+  // ===============================
   // UPDATE BOOKING STATUS
+  // ===============================
+
   const updateStatus = async (id, value) => {
     try {
       const response = await axios.put(
@@ -48,46 +66,70 @@ const Bookings = ({ token }) => {
           bookingStatus: value,
         },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          withCredentials: true,
         },
       );
 
       if (response.data.success) {
-        toast.success("Booking status updated");
+        toast.success(
+          "Booking status updated",
+        );
+
         fetchAllBookings();
       } else {
-        toast.error(response.data.message);
+        toast.error(
+          response.data.message ||
+            "Failed to update status",
+        );
       }
     } catch (error) {
-      console.log(error);
+      console.error(
+        "Update Booking Status Error:",
+        error,
+      );
 
       toast.error(
-        error.response?.data?.message || "Failed to update booking status",
+        error.response?.data?.message ||
+          "Failed to update booking status",
       );
     }
   };
 
+  // ===============================
+  // INITIAL FETCH
+  // ===============================
+
   useEffect(() => {
     fetchAllBookings();
-  }, [token]);
+  }, []);
 
+  // ===============================
   // SOCKET CONNECTION
+  // ===============================
+
   useEffect(() => {
-    const socket = io(backendURL);
+    const socket = io(backendURL, {
+      withCredentials: true,
+    });
 
     socket.on("connect", () => {
-      console.log("Connected to Socket Server");
+      console.log(
+        "Connected to Socket Server",
+      );
     });
 
     socket.on("newBooking", (data) => {
-      console.log("New Booking:", data);
+      console.log(
+        "New Booking:",
+        data,
+      );
 
       toast(
         <div className="flex flex-col">
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-2xl">⚽</span>
+            <span className="text-2xl">
+              ⚽
+            </span>
 
             <h3 className="font-bold text-lg text-green-700">
               New Booking Received
@@ -95,11 +137,21 @@ const Bookings = ({ token }) => {
           </div>
 
           <div className="space-y-1 text-sm">
-            <p>👤 {data.customerName}</p>
-            <p>🏟️ {data.venueName}</p>
-            <p>🕒 {data.timeSlot}</p>
+            <p>
+              👤 {data.customerName}
+            </p>
 
-            <p className="font-bold text-green-600">💰 ₹{data.totalPrice}</p>
+            <p>
+              🏟️ {data.venueName}
+            </p>
+
+            <p>
+              🕒 {data.timeSlot}
+            </p>
+
+            <p className="font-bold text-green-600">
+              💰 ₹{data.totalPrice}
+            </p>
           </div>
         </div>,
         {
@@ -120,12 +172,22 @@ const Bookings = ({ token }) => {
     };
   }, []);
 
+  // ===============================
   // BOOKING STATUS STYLES
+  // ===============================
+
   const bookingStatusStyles = {
-    Pending: "bg-yellow-100 text-yellow-800 border-yellow-300",
-    Confirmed: "bg-blue-100 text-blue-800 border-blue-300",
-    Completed: "bg-green-100 text-green-800 border-green-300",
-    Cancelled: "bg-red-100 text-red-800 border-red-300",
+    Pending:
+      "bg-yellow-100 text-yellow-800 border-yellow-300",
+
+    Confirmed:
+      "bg-blue-100 text-blue-800 border-blue-300",
+
+    Completed:
+      "bg-green-100 text-green-800 border-green-300",
+
+    Cancelled:
+      "bg-red-100 text-red-800 border-red-300",
   };
 
   return (
@@ -160,16 +222,25 @@ const Bookings = ({ token }) => {
             <tbody className="bg-white divide-y divide-slate-200">
               {isLoading ? (
                 <tr>
-                  <td colSpan="4" className="text-center py-10">
+                  <td
+                    colSpan="4"
+                    className="text-center py-10"
+                  >
                     <div className="flex justify-center items-center gap-2 text-slate-500">
                       <FaSpinner className="animate-spin h-5 w-5" />
-                      <span>Loading bookings...</span>
+
+                      <span>
+                        Loading bookings...
+                      </span>
                     </div>
                   </td>
                 </tr>
               ) : bookings.length > 0 ? (
                 bookings.map((booking) => (
-                  <tr key={booking._id} className="hover:bg-slate-50">
+                  <tr
+                    key={booking._id}
+                    className="hover:bg-slate-50"
+                  >
                     {/* CUSTOMER */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-slate-900">
@@ -188,7 +259,10 @@ const Bookings = ({ token }) => {
                       </div>
 
                       <div className="text-sm text-slate-500">
-                        {new Date(booking.bookingDate).toLocaleDateString()} at{" "}
+                        {new Date(
+                          booking.bookingDate,
+                        ).toLocaleDateString()}{" "}
+                        at{" "}
                         {booking.timeSlot}
                       </div>
                     </td>
@@ -201,29 +275,49 @@ const Bookings = ({ token }) => {
                     {/* BOOKING STATUS */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <select
-                        value={booking.bookingStatus}
+                        value={
+                          booking.bookingStatus
+                        }
                         onChange={(e) =>
-                          updateStatus(booking._id, e.target.value)
+                          updateStatus(
+                            booking._id,
+                            e.target.value,
+                          )
                         }
                         className={`text-xs font-semibold rounded-full py-1 px-3 border appearance-none focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                          bookingStatusStyles[booking.bookingStatus]
+                          bookingStatusStyles[
+                            booking.bookingStatus
+                          ]
                         }`}
                       >
-                        <option value="Pending">Pending</option>
+                        <option value="Pending">
+                          Pending
+                        </option>
 
-                        <option value="Confirmed">Confirmed</option>
+                        <option value="Confirmed">
+                          Confirmed
+                        </option>
 
-                        <option value="Completed">Completed</option>
+                        <option value="Completed">
+                          Completed
+                        </option>
 
-                        <option value="Cancelled">Cancelled</option>
+                        <option value="Cancelled">
+                          Cancelled
+                        </option>
                       </select>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="4" className="text-center py-10">
-                    <p className="text-slate-500">No bookings found.</p>
+                  <td
+                    colSpan="4"
+                    className="text-center py-10"
+                  >
+                    <p className="text-slate-500">
+                      No bookings found.
+                    </p>
                   </td>
                 </tr>
               )}
