@@ -35,7 +35,7 @@ const App = () => {
   useEffect(() => {
     const checkAdmin = async () => {
       try {
-        const response = await axios.get(`${backendURL}/auth/admin/`, {
+        const response = await axios.get(`${backendURL}/auth/admin/me`, {
           withCredentials: true,
         });
 
