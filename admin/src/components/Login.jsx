@@ -2,45 +2,37 @@ import axios from "axios";
 import React from "react";
 import { backendURL } from "../App";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
 
-const Login = () => {
+const Login = ({ setIsAdmin }) => {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
-    const navigate = useNavigate();
 
   const onSubmitHandler = async (e) => {
-  
     e.preventDefault();
 
     try {
       const response = await axios.post(
-        backendURL + "/auth/admin",
+        `${backendURL}/auth/admin`,
         {
           email,
           password,
         },
         {
           withCredentials: true,
-        },
+        }
       );
 
       if (response.data.success) {
+        setIsAdmin(true);
         toast.success("Login Successful");
-        
-         navigate("/add");
       } else {
-        toast.error(
-          response.data.message ||
-            "Login failed",
-        );
+        toast.error(response.data.message || "Login failed");
       }
     } catch (error) {
       console.log("Admin Login Error:", error);
 
       toast.error(
-        error.response?.data?.message ||
-          "Login failed",
+        error.response?.data?.message || "Login failed"
       );
     }
   };
@@ -60,9 +52,7 @@ const Login = () => {
             </p>
 
             <input
-              onChange={(e) =>
-                setEmail(e.target.value)
-              }
+              onChange={(e) => setEmail(e.target.value)}
               value={email}
               className="rounded-md w-full px-3 py-2 border border-gray-300 outline-none focus:ring-2 focus:ring-blue-500"
               type="email"
@@ -79,9 +69,7 @@ const Login = () => {
             </p>
 
             <input
-              onChange={(e) =>
-                setPassword(e.target.value)
-              }
+              onChange={(e) => setPassword(e.target.value)}
               value={password}
               className="rounded-md w-full px-3 py-2 border border-gray-300 outline-none focus:ring-2 focus:ring-blue-500"
               type="password"
@@ -105,3 +93,4 @@ const Login = () => {
 };
 
 export default Login;
+
