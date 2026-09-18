@@ -13,44 +13,34 @@ const Bookings = () => {
   // FETCH ALL BOOKINGS
   // ===============================
 
-  const fetchAllBookings = async () => {
-    setIsLoading(true);
+  const fetchAllBookings = async (showLoader = true) => {
+    if (showLoader) {
+      setIsLoading(true);
+    }
 
     try {
-      const response = await axios.get(
-        `${backendURL}/booking/all`,
-        {
-          withCredentials: true,
-        },
-      );
+      const response = await axios.get(`${backendURL}/booking/all`, {
+        withCredentials: true,
+      });
 
       if (response.data.success) {
-        setBookings(
-          response.data.bookings || [],
-        );
+        setBookings(response.data.bookings || []);
       } else {
-        toast.error(
-          response.data.message ||
-            "Failed to fetch bookings",
-        );
+        toast.error(response.data.message || "Failed to fetch bookings");
       }
     } catch (error) {
-      console.error(
-        "Fetch Bookings Error:",
-        error,
-      );
+      console.error("Fetch Bookings Error:", error);
 
       if (error.response?.status === 401) {
         toast.error("Admin session expired");
         return;
       }
 
-      toast.error(
-        error.response?.data?.message ||
-          "Error fetching bookings",
-      );
+      toast.error(error.response?.data?.message || "Error fetching bookings");
     } finally {
-      setIsLoading(false);
+      if (showLoader) {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -107,22 +97,57 @@ const Bookings = () => {
   // SOCKET CONNECTION
   // ===============================
 
-  useEffect(() => {
-    const socket = io(backendURL, {
-      withCredentials: true,
-    });
+ useEffect(() => {
+  const socket = io(backendURL, {
+    withCredentials: true,
+  });
 
-    socket.on("connect", () => {
-      console.log(
-        "Connected to Socket Server",
-      );
-    });
+  socket.on("connect", () => {
+    console.log("Connected to Socket Server");
+  });
 
-    socket.on("newBooking", (data) => {
-      console.log(
-        "New Booking:",
-        data,
-      );
+  socket.on("newBooking", async (data) => {
+    console.log("New Booking:", data);
+
+    toast(
+      <div className="flex flex-col">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-2xl">⚽</span>
+
+          <h3 className="font-bold text-lg text-green-700">
+            New Booking Received
+          </h3>
+        </div>
+
+        <div className="space-y-1 text-sm">
+          <p>👤 {data.customerName}</p>
+          <p>🏟️ {data.venueName}</p>
+          <p>🕒 {data.timeSlot}</p>
+
+          <p className="font-bold text-green-600">
+            💰 ₹{data.totalPrice}
+          </p>
+        </div>
+      </div>,
+      {
+        type: "success",
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+      },
+    );
+
+    // Refresh booking list without showing loading spinner
+    await fetchAllBookings(false);
+  });
+
+  return () => {
+    socket.disconnect();
+  };
+}, [backendURL]);
+
 
       toast(
         <div className="flex flex-col">
