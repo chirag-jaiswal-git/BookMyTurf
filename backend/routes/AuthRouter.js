@@ -158,6 +158,10 @@ router.post("/logout", (req, res, next) => {
 // ===============================
 
 router.get("/me", (req, res) => {
+   console.log("Session ID:", req.sessionID);
+   console.log("Session:", req.session);
+   console.log("Authenticated:", req.isAuthenticated());
+   console.log("User:", req.user);
   if (!req.isAuthenticated()) {
     return res.status(401).json({
       success: false,
