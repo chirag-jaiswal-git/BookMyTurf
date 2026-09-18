@@ -4,6 +4,7 @@ import venueModel from "../models/venueModel.js";
 
 import { getIO } from "../socket.js";
 
+
 // ===============================
 // CREATE BOOKING
 // ===============================
@@ -46,16 +47,18 @@ export const createBooking = async (req, res) => {
 
     const newBooking = await bookingModel.create({
       venueId,
-
-      // Passport session user
       userId: req.user._id,
       name: req.user.name,
       email: req.user.email,
-
       bookingDate,
       timeSlot,
       totalPrice,
     });
+
+    // Get complete booking with venue details
+    const bookingWithVenue = await bookingModel
+      .findById(newBooking._id)
+      .populate("venueId");
 
     // ===============================
     // ADMIN SOCKET NOTIFICATION
@@ -64,24 +67,21 @@ export const createBooking = async (req, res) => {
     try {
       const io = getIO();
 
-      io.to("admins").emit("newBooking", {
-        bookingId: newBooking._id,
-        customerName: req.user.name,
-        customerEmail: req.user.email,
-        venueName: venue.name,
-        bookingDate: newBooking.bookingDate,
-        timeSlot: newBooking.timeSlot,
-        totalPrice: newBooking.totalPrice,
-        bookingStatus: newBooking.bookingStatus,
-      });
+      io.to("admins").emit(
+        "newBooking",
+        bookingWithVenue
+      );
     } catch (socketError) {
-      console.error("Socket Notification Error:", socketError);
+      console.error(
+        "Socket Notification Error:",
+        socketError
+      );
     }
 
     res.status(201).json({
       success: true,
       message: "Booking created successfully",
-      booking: newBooking,
+      booking: bookingWithVenue,
     });
   } catch (error) {
     console.error("BOOKING ERROR:", error);
@@ -99,6 +99,8 @@ export const createBooking = async (req, res) => {
     });
   }
 };
+
+
 
 // ===============================
 // GET MY BOOKINGS

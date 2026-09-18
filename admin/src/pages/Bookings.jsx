@@ -3,7 +3,7 @@ import axios from "axios";
 import { backendURL } from "../App";
 import { toast } from "react-toastify";
 import { FaSpinner } from "react-icons/fa";
-import { io } from "socket.io-client";
+import socket from "../socket";
 
 const Bookings = () => {
   const [bookings, setBookings] = useState([]);
@@ -97,46 +97,64 @@ const Bookings = () => {
     fetchAllBookings();
   }, []);
 
-  // =========================
-  // SOCKET.IO
-  // =========================
-  useEffect(() => {
-    const socket = io(backendURL, {
-      withCredentials: true,
-    });
 
-    socket.on("connect", () => {
-      console.log(
-        "Admin connected to Socket.IO:",
-        socket.id
-      );
-    });
+// =========================
+// SOCKET.IO
+// =========================
+useEffect(() => {
+  const handleNewBooking = (newBooking) => {
+    console.log("New Booking Received:", newBooking);
 
-    socket.on("newBooking", async (data) => {
-      console.log("New Booking Received:", data);
+    // Add new booking immediately to the table
+    setBookings((prevBookings) => [
+      newBooking,
+      ...prevBookings,
+    ]);
 
-      toast.success("New booking received");
+    toast.success("New booking received");
+  };
 
-      // Fetch latest data and update table
-      // without showing loading spinner
-      await fetchAllBookings(false);
-    });
+  const handleConnect = () => {
+    console.log(
+      "Admin connected to Socket.IO:",
+      socket.id
+    );
 
-    socket.on("connect_error", (error) => {
-      console.error(
-        "Socket connection error:",
-        error
-      );
-    });
+    // Join admin room
+    socket.emit("join-admin");
 
-    return () => {
-      socket.off("connect");
-      socket.off("newBooking");
-      socket.off("connect_error");
+    console.log("Admin joined socket room");
+  };
 
-      socket.disconnect();
-    };
-  }, []);
+  socket.on("connect", handleConnect);
+
+  socket.on(
+    "newBooking",
+    handleNewBooking
+  );
+
+  socket.on("connect_error", (error) => {
+    console.error(
+      "Socket connection error:",
+      error
+    );
+  });
+
+  // If socket is already connected
+  if (socket.connected) {
+    socket.emit("join-admin");
+  }
+
+  return () => {
+    socket.off("connect", handleConnect);
+    socket.off(
+      "newBooking",
+      handleNewBooking
+    );
+    socket.off("connect_error");
+  };
+}, []);
+
 
   return (
     <div className="w-full">
