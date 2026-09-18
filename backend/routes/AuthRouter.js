@@ -92,22 +92,49 @@ router.post("/signup", async (req, res) => {
 // USER LOGIN
 // ===============================
 
-router.post(
-  "/login",
-  passport.authenticate("local"),
-  (req, res) => {
-    return res.status(200).json({
-      success: true,
-      message: "User logged in successfully",
-      user: {
-        id: req.user._id,
-        name: req.user.name,
-        email: req.user.email,
-        phone: req.user.phone,
-      },
+router.post("/login", (req, res, next) => {
+  passport.authenticate("local", (error, user, info) => {
+    if (error) {
+      console.error("Login Error:", error);
+
+      return res.status(500).json({
+        success: false,
+        message: "Server error",
+      });
+    }
+
+    if (!user) {
+      console.log("Login Failed:", info);
+
+      return res.status(401).json({
+        success: false,
+        message: info?.message || "Invalid email or password",
+      });
+    }
+
+    req.logIn(user, (error) => {
+      if (error) {
+        console.error("Session Login Error:", error);
+
+        return res.status(500).json({
+          success: false,
+          message: "Session login failed",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "User logged in successfully",
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+        },
+      });
     });
-  },
-);
+  })(req, res, next);
+});
 
 // ===============================
 // USER LOGOUT
@@ -130,36 +157,28 @@ router.post(
 // GET CURRENT USER
 // ===============================
 
-// router.get("/me", (req, res) => {
-//   if (!req.isAuthenticated()) {
-//     return res.status(401).json({
-//       success: false,
-//       message: "Please login first",
-//     });
-//   }
+router.get("/me", (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({
+      success: false,
+      message: "Please login first",
+    });
+  }
 
-//   return res.status(200).json({
-//     success: true,
-//     user: {
-//       id: req.user._id,
-//       name: req.user.name,
-//       email: req.user.email,
-//       phone: req.user.phone,
-//     },
-//   });
-// });
-
-// ===============================
-// ADMIN LOGIN
-// ===============================
+  return res.status(200).json({
+    success: true,
+    user: {
+      id: req.user._id,
+      name: req.user.name,
+      email: req.user.email,
+      phone: req.user.phone,
+    },
+  });
+});
 
 router.post("/admin", adminLogin);
 
-// ===============================
-// CHECK ADMIN SESSION
-// ===============================
-
-router.get("/admin", (req, res) => {
+router.get("/admin/me", (req, res) => {
   if (!req.session.isAdmin) {
     return res.status(401).json({
       success: false,
@@ -174,18 +193,14 @@ router.get("/admin", (req, res) => {
   });
 });
 
-// ===============================
-// ADMIN LOGOUT
-// ===============================
+router.post("/admin/logout", (req, res) => {
+  req.session.isAdmin = false;
+  req.session.adminEmail = null;
 
-// router.post("/admin/logout", (req, res) => {
-//   req.session.isAdmin = false;
-//   req.session.adminEmail = null;
-
-//   return res.status(200).json({
-//     success: true,
-//     message: "Admin logged out successfully",
-//   });
-// });
+  return res.status(200).json({
+    success: true,
+    message: "Admin logged out successfully",
+  });
+});
 
 export default router;
