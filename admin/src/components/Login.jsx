@@ -27,7 +27,8 @@ const Login = () => {
 
       if (response.data.success) {
         toast.success("Login Successful");
-         navigate("/");
+        
+         navigate("/add");
       } else {
         toast.error(
           response.data.message ||
