@@ -140,18 +140,18 @@ router.post("/login", (req, res, next) => {
 // USER LOGOUT
 // ===============================
 
-// router.post("/logout", (req, res, next) => {
-//   req.logout((error) => {
-//     if (error) {
-//       return next(error);
-//     }
+router.post("/logout", (req, res, next) => {
+  req.logout((error) => {
+    if (error) {
+      return next(error);
+    }
 
-//     return res.status(200).json({
-//       success: true,
-//       message: "User logged out successfully",
-//     });
-//   });
-// });
+    return res.status(200).json({
+      success: true,
+      message: "User logged out successfully",
+    });
+  });
+});
 
 // ===============================
 // GET CURRENT USER
