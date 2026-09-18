@@ -5,6 +5,7 @@ import http from "http";
 import session from "express-session";
 import passport from "./config/passport.js";
 import { Server } from "socket.io";
+import MongoStore from "connect-mongo";
 
 // Database & Cloudinary
 import connectDB from "./config/mongodb.js";
@@ -74,16 +75,19 @@ app.use(express.urlencoded({ extended: true }));
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
+
     resave: false,
     saveUninitialized: false,
 
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGODB_URI,
+      collectionName: "sessions",
+    }),
+
     cookie: {
       httpOnly: true,
-
       secure: process.env.NODE_ENV === "production",
-
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-
       maxAge: 7 * 24 * 60 * 60 * 1000,
     },
   }),
