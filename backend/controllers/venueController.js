@@ -62,6 +62,10 @@ const addVenue = async (req, res) => {
     });
   } catch (error) {
     console.error("Add Venue Error:", error);
+     console.error("========== ADD VENUE ERROR ==========");
+     console.error("Message:", error.message);
+     console.error("Stack:", error.stack);
+     console.error("======================================");
 
     res.status(500).json({
       success: false,
