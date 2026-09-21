@@ -2,7 +2,6 @@ import { v2 as cloudinary } from "cloudinary";
 import venueModel from "../models/venueModel.js";
 import bookingModel from "../models/bookingModel.js";
 import mongoose from "mongoose";
-import fs from "fs";
 
 // ADD VENUE
 const addVenue = async (req, res) => {
@@ -29,17 +28,30 @@ const addVenue = async (req, res) => {
 
     const imagesUrl = [];
 
-    for (const file of req.files || []) {
-      const result = await cloudinary.uploader.upload(file.path, {
-        folder: "bookmyturf/venues",
-      });
+   const uploadToCloudinary = (buffer) => {
+     return new Promise((resolve, reject) => {
+       const stream = cloudinary.uploader.upload_stream(
+         {
+           folder: "bookmyturf/venues",
+         },
+         (error, result) => {
+           if (error) {
+             reject(error);
+           } else {
+             resolve(result);
+           }
+         },
+       );
 
-      imagesUrl.push(result.secure_url);
+       stream.end(buffer);
+     });
+   };
 
-      if (fs.existsSync(file.path)) {
-        fs.unlinkSync(file.path);
-      }
-    }
+   for (const file of req.files || []) {
+     const result = await uploadToCloudinary(file.buffer);
+
+     imagesUrl.push(result.secure_url);
+   }
 
     const venue = await venueModel.create({
       name: name.trim(),
