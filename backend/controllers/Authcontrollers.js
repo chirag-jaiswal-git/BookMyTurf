@@ -132,7 +132,7 @@ const login = (req, res, next) => {
 // ADMIN LOGIN
 // ===============================
 
-const adminLogin = (req, res, next) => {
+const adminLogin = (req, res) => {
   const email = req.body.email?.trim().toLowerCase();
   const password = req.body.password;
 
@@ -153,12 +153,29 @@ const adminLogin = (req, res, next) => {
     });
   }
 
+  // Create admin session
   req.session.isAdmin = true;
   req.session.adminEmail = email;
 
-  return res.status(200).json({
-    success: true,
-    message: "Admin login successful",
+  // Explicitly save session before responding
+  req.session.save((error) => {
+    if (error) {
+      console.error("Admin Session Save Error:", error);
+
+      return res.status(500).json({
+        success: false,
+        message: "Failed to save admin session",
+      });
+    }
+
+    console.log("✅ Admin session saved");
+    console.log("Session ID:", req.sessionID);
+    console.log("Admin session:", req.session);
+
+    return res.status(200).json({
+      success: true,
+      message: "Admin login successful",
+    });
   });
 };
 
