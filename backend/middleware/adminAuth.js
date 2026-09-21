@@ -1,10 +1,5 @@
 const adminAuth = (req, res, next) => {
-  console.log("========== ADMIN AUTH ==========");
-  console.log("Session ID:", req.sessionID);
-  console.log("Session:", req.session);
-  console.log("isAdmin:", req.session.isAdmin);
-  console.log("adminEmail:", req.session.adminEmail);
-
+  
   if (!req.session.isAdmin) {
     console.log("❌ ADMIN AUTH FAILED");
 
